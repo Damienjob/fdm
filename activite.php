@@ -25,6 +25,23 @@ if ($result->num_rows === 0) {
 }
 
 $activite = $result->fetch_assoc();
+
+
+$activite_id = $activite['id']; // Récupérer l'ID explicitement
+
+// Récupérer les images supplémentaires liées à cette activité en utilisant l'ID
+$sql_images = "SELECT * FROM images_activites WHERE activite_id = ?";
+$stmt_images = $conn->prepare($sql_images);
+$stmt_images->bind_param("i", $activite_id);
+$stmt_images->execute();
+$result_images = $stmt_images->get_result();
+
+// Stocker les chemins des images dans un tableau
+$images = [];
+while ($row = $result_images->fetch_assoc()) {
+    $images[] = $row['chemin'];
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -127,10 +144,17 @@ $activite = $result->fetch_assoc();
                         </center><br><br>
                         <div class="container">
                             <div class="row text-center">
-                                <div class="col">
-                                    <img class="img-fluid fixed-size" src="assets/images/Activité4/image.jpg" alt="">
-                                </div>
-                                
+                            <?php foreach ($images as $image): ?>
+        <div class="col-md-4 mb-4">
+            <img class="img-fluid fixed-size" src="fdm-main/<?= htmlspecialchars($image) ?>" alt="Image de l'activité">
+        </div>
+        <?php endforeach; ?>
+        <?php if (empty($activite['image']) && count($images) === 0): ?>
+        <div class="col-12">
+            <p>Aucune image disponible pour cette activité.</p>
+        </div>
+        <?php endif; ?>
+        
                                 
                             </div>
                         </div>

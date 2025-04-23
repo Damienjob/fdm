@@ -18,7 +18,10 @@ if ($conn->connect_error) {
   die('Erreur de connexion : ' . $conn->connect_error);
 }
 
-// Configuration de la pagination
+// Déterminer quelle section est active
+$activeTab = isset($_GET['tab']) ? $_GET['tab'] : 'activities';
+
+// Configuration de la pagination pour les activités
 $activitiesPerPage = 5; // Nombre d'activités par page
 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
 $offset = ($page - 1) * $activitiesPerPage;
@@ -36,6 +39,27 @@ $activities = [];
 if ($result && $result->num_rows > 0) {
   while ($row = $result->fetch_assoc()) {
     $activities[] = $row;
+  }
+}
+
+// Configuration de la pagination pour les emails
+$emailsPerPage = 10; // Nombre d'emails par page
+$emailPage = isset($_GET['email_page']) ? intval($_GET['email_page']) : 1;
+$emailOffset = ($emailPage - 1) * $emailsPerPage;
+
+// Compter le nombre total d'emails
+$countEmailsSql = "SELECT COUNT(*) as total FROM subscribers";
+$countEmailsResult = $conn->query($countEmailsSql);
+$totalEmails = $countEmailsResult->fetch_assoc()['total'];
+$totalEmailPages = ceil($totalEmails / $emailsPerPage);
+
+// Récupération des emails avec pagination
+$emailsSql = "SELECT * FROM subscribers ORDER BY date_subscribed DESC LIMIT $emailOffset, $emailsPerPage";
+$emailsResult = $conn->query($emailsSql);
+$emails = [];
+if ($emailsResult && $emailsResult->num_rows > 0) {
+  while ($row = $emailsResult->fetch_assoc()) {
+    $emails[] = $row;
   }
 }
 
@@ -111,6 +135,26 @@ if ($result && $result->num_rows > 0) {
     </header>
     <!-- Main Content -->
     <main class="container mx-auto px-4 pt-24 pb-10">
+      <!-- Navigation Tabs -->
+      <div class="mb-6 border-b border-gray-200">
+        <nav class="flex -mb-px">
+          <a href="?tab=activities" class="<?php echo $activeTab == 'activities' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?> whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm mr-8 flex items-center">
+            <div class="w-5 h-5 flex items-center justify-center mr-2">
+              <i class="ri-calendar-event-line"></i>
+            </div>
+            Activités
+          </a>
+          <a href="?tab=emails" class="<?php echo $activeTab == 'emails' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?> whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm flex items-center">
+            <div class="w-5 h-5 flex items-center justify-center mr-2">
+              <i class="ri-mail-line"></i>
+            </div>
+            Emails
+          </a>
+        </nav>
+      </div>
+      
+      <?php if ($activeTab == 'activities'): ?>
+      <!-- Activities Tab Content -->
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Gestion des Activités</h2>
         <button
@@ -202,7 +246,7 @@ if ($result && $result->num_rows > 0) {
             </tbody>
           </table>
         </div>
-        <!-- Pagination -->
+        <!-- Pagination for Activities -->
         <?php if ($totalPages > 1): ?>
         <div class="px-4 py-5 border-t border-gray-200 flex justify-between items-center">
           <div class="text-sm text-gray-600">
@@ -210,7 +254,7 @@ if ($result && $result->num_rows > 0) {
           </div>
           <div class="flex space-x-1">
             <?php if ($page > 1): ?>
-              <a href="?page=<?= $page-1 ?>" class="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 hover:bg-gray-100">
+              <a href="?tab=activities&page=<?= $page-1 ?>" class="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 hover:bg-gray-100">
                 <i class="ri-arrow-left-s-line"></i>
               </a>
             <?php endif; ?>
@@ -227,13 +271,13 @@ if ($result && $result->num_rows > 0) {
             
             for ($i = $startPage; $i <= $endPage; $i++): 
             ?>
-              <a href="?page=<?= $i ?>" class="w-8 h-8 flex items-center justify-center rounded-full <?= $i == $page ? 'bg-primary text-white' : 'border border-gray-300 hover:bg-gray-100' ?>">
+              <a href="?tab=activities&page=<?= $i ?>" class="w-8 h-8 flex items-center justify-center rounded-full <?= $i == $page ? 'bg-primary text-white' : 'border border-gray-300 hover:bg-gray-100' ?>">
                 <?= $i ?>
               </a>
             <?php endfor; ?>
             
             <?php if ($page < $totalPages): ?>
-              <a href="?page=<?= $page+1 ?>" class="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 hover:bg-gray-100">
+              <a href="?tab=activities&page=<?= $page+1 ?>" class="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 hover:bg-gray-100">
                 <i class="ri-arrow-right-s-line"></i>
               </a>
             <?php endif; ?>
@@ -241,7 +285,176 @@ if ($result && $result->num_rows > 0) {
         </div>
         <?php endif; ?>
       </div>
+      <?php elseif ($activeTab == 'emails'): ?>
+      <!-- Emails Tab Content -->
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Liste des Abonnés</h2>
+        <div class="flex gap-2">
+          <button
+            id="exportEmailsBtn"
+            class="bg-green-600 text-white px-4 py-2 rounded-button font-medium hover:bg-green-700 transition whitespace-nowrap flex items-center"
+          >
+            <div class="w-5 h-5 flex items-center justify-center mr-1">
+              <i class="ri-file-download-line"></i>
+            </div>
+            Exporter (CSV)
+          </button>
+        </div>
+      </div>  
+        
+      </div>
+      
+      <!-- Emails Table -->
+      <div class="bg-white rounded shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+          <h3 class="font-medium text-gray-700">Liste des emails</h3>
+          
+        </div>
+        <div class="table-responsive">
+          <table class="w-full">
+            <thead class="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th class="text-left py-3 px-4 font-semibold text-sm text-gray-600 w-12">
+                  <input type="checkbox" id="selectAllEmails" class="rounded border-gray-300 text-primary focus:ring-primary">
+                </th>
+                <th class="text-left py-3 px-4 font-semibold text-sm text-gray-600">
+                  Email
+                </th>
+                <th class="text-left py-3 px-4 font-semibold text-sm text-gray-600">
+                  Date d'inscription
+                </th>
+                <th class="text-left py-3 px-4 font-semibold text-sm text-gray-600">
+                  Statut
+                </th>
+                <th class="text-right py-3 px-4 font-semibold text-sm text-gray-600">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach ($emails as $email): ?>
+              <tr class="border-b border-gray-200 hover:bg-gray-50">
+                <td class="py-3 px-4">
+                  <input type="checkbox" name="email_ids[]" value="<?= $email['id'] ?>" class="email-checkbox rounded border-gray-300 text-primary focus:ring-primary">
+                </td>
+                <td class="py-3 px-4 font-medium">
+                  <?= htmlspecialchars($email['email']) ?>
+                </td>
+                <td class="py-3 px-4 text-gray-600">
+                  <?= date('d/m/Y H:i', strtotime($email['date_subscribed'])) ?>
+                </td>
+                <td class="py-3 px-4">
+                  <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                    Actif
+                  </span>
+                </td>
+                <td class="py-3 px-4 text-right">
+                  <div class="flex justify-end gap-2">
+                    <button class="email-delete-btn w-8 h-8 bg-red-50 rounded-full flex items-center justify-center text-red-600 hover:bg-red-100" data-id="<?= $email['id'] ?>">
+                      <i class="ri-delete-bin-line"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <?php endforeach; ?>
+              <?php if (empty($emails)): ?>
+              <tr>
+                <td colspan="5" class="py-8 text-center text-gray-500">
+                  <div class="flex flex-col items-center">
+                    <div class="bg-gray-100 p-3 rounded-full mb-2">
+                      <i class="ri-mail-line text-gray-400 text-xl"></i>
+                    </div>
+                    <p>Aucun abonné trouvé</p>
+                  </div>
+                </td>
+              </tr>
+              <?php endif; ?>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Pagination for Emails -->
+        <?php if ($totalEmailPages > 1): ?>
+        <div class="px-4 py-5 border-t border-gray-200 flex justify-between items-center">
+          <div class="text-sm text-gray-600">
+            Affichage de <?= min($emailsPerPage * ($emailPage - 1) + 1, $totalEmails) ?> à <?= min($emailsPerPage * $emailPage, $totalEmails) ?> sur <?= $totalEmails ?> abonnés
+          </div>
+          <div class="flex space-x-1">
+            <?php if ($emailPage > 1): ?>
+              <a href="?tab=emails&email_page=<?= $emailPage-1 ?>" class="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 hover:bg-gray-100">
+                <i class="ri-arrow-left-s-line"></i>
+              </a>
+            <?php endif; ?>
+            
+            <?php
+            // Afficher les liens de pagination
+            $startPage = max(1, min($emailPage - 2, $totalEmailPages - 4));
+            $endPage = min($totalEmailPages, max($emailPage + 2, 5));
+            
+            // Toujours afficher au moins 5 pages si possible
+            if ($endPage - $startPage < 4) {
+              $startPage = max(1, $endPage - 4);
+            }
+            
+            for ($i = $startPage; $i <= $endPage; $i++): 
+            ?>
+              <a href="?tab=emails&email_page=<?= $i ?>" class="w-8 h-8 flex items-center justify-center rounded-full <?= $i == $emailPage ? 'bg-primary text-white' : 'border border-gray-300 hover:bg-gray-100' ?>">
+                <?= $i ?>
+              </a>
+            <?php endfor; ?>
+            
+            <?php if ($emailPage < $totalEmailPages): ?>
+              <a href="?tab=emails&email_page=<?= $emailPage+1 ?>" class="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 hover:bg-gray-100">
+                <i class="ri-arrow-right-s-line"></i>
+              </a>
+            <?php endif; ?>
+          </div>
+        </div>
+        <?php endif; ?>
+        
+        <!-- Bulk Actions Footer -->
+        <div class="p-4 bg-gray-50 flex items-center border-t border-gray-200">
+          <label class="text-sm text-gray-600 mr-3">Pour la sélection:</label>
+          <div class="flex space-x-2">
+            <button id="bulkDeleteBtn" class="px-3 py-1 bg-red-600 text-white rounded-button text-sm font-medium hover:bg-red-700 transition flex items-center" disabled>
+              <div class="w-4 h-4 flex items-center justify-center mr-1">
+                <i class="ri-delete-bin-line"></i>
+              </div>
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+      <?php endif; ?>
     </main>
+    
+    <!-- Delete Email Confirmation Modal -->
+    <div id="deleteEmailModal" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+      <div class="bg-white rounded-lg w-full max-w-md">
+        <div class="p-6 text-center">
+          <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <i class="ri-error-warning-line ri-2x text-red-600"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">
+            Confirmer la suppression
+          </h3>
+          <p class="text-gray-600 mb-6">
+            Êtes-vous sûr de vouloir supprimer cet email de la liste des abonnés ? Cette action est irréversible.
+          </p>
+          <div class="flex justify-center space-x-3">
+            <button id="cancelDeleteEmailBtn" class="px-4 py-2 border border-gray-300 rounded-button text-gray-700 hover:bg-gray-50 whitespace-nowrap !rounded-button">
+              Annuler
+            </button>
+            <button id="confirmDeleteEmailBtn" class="px-4 py-2 bg-red-600 text-white rounded-button hover:bg-red-700 whitespace-nowrap !rounded-button flex items-center justify-center">
+              <div class="w-5 h-5 flex items-center justify-center mr-1">
+                <i class="ri-delete-bin-line"></i>
+              </div>
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- Add/Edit Activity Modal -->
     <div
       id="activityModal"
@@ -910,6 +1123,186 @@ if ($result && $result->num_rows > 0) {
       }
     });
   }
-</script>              
+</script>
+<script>
+  // Gestion de l'export d'emails
+document.addEventListener('DOMContentLoaded', function() {
+    // Export d'emails
+    const exportEmailsBtn = document.getElementById('exportEmailsBtn');
+    if (exportEmailsBtn) {
+        exportEmailsBtn.addEventListener('click', function() {
+            window.location.href = 'export_emails.php';
+        });
+    }
+
+    // Sélection d'emails
+    const selectAllEmails = document.getElementById('selectAllEmails');
+    const emailCheckboxes = document.querySelectorAll('.email-checkbox');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+
+    if (selectAllEmails) {
+        selectAllEmails.addEventListener('change', function() {
+            const isChecked = this.checked;
+            emailCheckboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+            updateBulkDeleteButton();
+        });
+    }
+
+    emailCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateBulkDeleteButton);
+    });
+
+    // Mise à jour du bouton de suppression en masse
+    function updateBulkDeleteButton() {
+        const checkedCount = document.querySelectorAll('.email-checkbox:checked').length;
+        if (bulkDeleteBtn) {
+            bulkDeleteBtn.disabled = checkedCount === 0;
+            bulkDeleteBtn.innerHTML = `
+                <div class="w-4 h-4 flex items-center justify-center mr-1">
+                    <i class="ri-delete-bin-line"></i>
+                </div>
+                Supprimer (${checkedCount})
+            `;
+        }
+    }
+
+    // Suppression en masse
+    if (bulkDeleteBtn) {
+        bulkDeleteBtn.addEventListener('click', function() {
+            const selectedIds = [];
+            document.querySelectorAll('.email-checkbox:checked').forEach(checkbox => {
+                selectedIds.push(parseInt(checkbox.value));
+            });
+
+            if (selectedIds.length === 0) return;
+
+            // Afficher la confirmation
+            const deleteEmailModal = document.getElementById('deleteEmailModal');
+            const confirmDeleteEmailBtn = document.getElementById('confirmDeleteEmailBtn');
+            const cancelDeleteEmailBtn = document.getElementById('cancelDeleteEmailBtn');
+
+            if (deleteEmailModal) {
+                deleteEmailModal.querySelector('p').textContent = `Êtes-vous sûr de vouloir supprimer ${selectedIds.length} email(s) de la liste des abonnés ? Cette action est irréversible.`;
+                deleteEmailModal.classList.remove('hidden');
+
+                // Gérer la confirmation
+                confirmDeleteEmailBtn.onclick = function() {
+                    // Envoyer la requête AJAX
+                    fetch('bulk_delete_emails.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'ids=' + JSON.stringify(selectedIds)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Recharger la page après la suppression
+                            Swal.fire({
+                                title: 'Suppression réussie !',
+                                text: `${data.count} email(s) ont été supprimés.`,
+                                icon: 'success',
+                                confirmButtonColor: '#19CDFE'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Erreur',
+                                text: data.message || 'Une erreur est survenue lors de la suppression.',
+                                icon: 'error',
+                                confirmButtonColor: '#19CDFE'
+                            });
+                        }
+                        deleteEmailModal.classList.add('hidden');
+                    })
+                    .catch(error => {
+                        console.error('Erreur:', error);
+                        Swal.fire({
+                            title: 'Erreur',
+                            text: 'Une erreur technique est survenue.',
+                            icon: 'error',
+                            confirmButtonColor: '#19CDFE'
+                        });
+                        deleteEmailModal.classList.add('hidden');
+                    });
+                };
+
+                // Gérer l'annulation
+                cancelDeleteEmailBtn.onclick = function() {
+                    deleteEmailModal.classList.add('hidden');
+                };
+            }
+        });
+    }
+
+    // Suppression individuelle d'email
+    const emailDeleteBtns = document.querySelectorAll('.email-delete-btn');
+    emailDeleteBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const emailId = this.getAttribute('data-id');
+            const deleteEmailModal = document.getElementById('deleteEmailModal');
+            const confirmDeleteEmailBtn = document.getElementById('confirmDeleteEmailBtn');
+            const cancelDeleteEmailBtn = document.getElementById('cancelDeleteEmailBtn');
+
+            if (deleteEmailModal) {
+                deleteEmailModal.querySelector('p').textContent = 'Êtes-vous sûr de vouloir supprimer cet email de la liste des abonnés ? Cette action est irréversible.';
+                deleteEmailModal.classList.remove('hidden');
+
+                // Gérer la confirmation
+                confirmDeleteEmailBtn.onclick = function() {
+                    // Envoyer la requête AJAX
+                    fetch('delete_email.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'id=' + emailId
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Suppression réussie !',
+                                text: 'L\'email a été supprimé avec succès.',
+                                icon: 'success',
+                                confirmButtonColor: '#19CDFE'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Erreur',
+                                text: data.message || 'Une erreur est survenue lors de la suppression.',
+                                icon: 'error',
+                                confirmButtonColor: '#19CDFE'
+                            });
+                        }
+                        deleteEmailModal.classList.add('hidden');
+                    })
+                    .catch(error => {
+                        console.error('Erreur:', error);
+                        Swal.fire({
+                            title: 'Erreur',
+                            text: 'Une erreur technique est survenue.',
+                            icon: 'error',
+                            confirmButtonColor: '#19CDFE'
+                        });
+                        deleteEmailModal.classList.add('hidden');
+                    });
+                };
+
+                // Gérer l'annulation
+                cancelDeleteEmailBtn.onclick = function() {
+                    deleteEmailModal.classList.add('hidden');
+                };
+            }
+        });
+    });
+});
+</script>            
   </body>
 </html>
