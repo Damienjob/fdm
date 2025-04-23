@@ -1,3 +1,22 @@
+<?php
+$conn = new mysqli("localhost", "root", "", "fdm");
+if ($conn->connect_error) die("Erreur : " . $conn->connect_error);
+
+// Paramètres de pagination
+$activitesParPage = 3; // Nombre d'activités par page
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$debut = ($page - 1) * $activitesParPage;
+
+// Compter le nombre total d'activités publiées
+$sqlCount = "SELECT COUNT(*) as total FROM activities WHERE statut = 'publié'";
+$resultCount = $conn->query($sqlCount);
+$totalActivites = $resultCount->fetch_assoc()['total'];
+$totalPages = ceil($totalActivites / $activitesParPage);
+
+// Récupérer les activités pour la page courante (triées par date de publication décroissante)
+$sql = "SELECT * FROM activities WHERE statut = 'publié' ORDER BY created_at DESC LIMIT $debut, $activitesParPage";
+$result = $conn->query($sql);
+?>
 <!DOCTYPE html>
 <html lang="fr">
   <head>
@@ -50,6 +69,51 @@
       .service-item img{
         height: 260px;
       }
+      #admin-button{
+        background-color: #19CDFE;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-weight: bold;
+        color: #000;
+        text-decoration: none;
+        cursor: pointer;
+        margin-left: 30px;
+      }
+      
+      /* Style pour la pagination */
+      .pagination {
+        display: flex;
+        justify-content: center;
+        margin: 30px 0;
+      }
+      
+      .pagination a, .pagination span {
+        color: #FDB300;
+        padding: 8px 16px;
+        text-decoration: none;
+        transition: background-color 0.3s;
+        border: 1px solid #ddd;
+        margin: 0 4px;
+        border-radius: 4px;
+        font-weight:bold;
+      }
+      
+      .pagination a:hover {
+        background-color: #FDB300;
+        color: white;
+      }
+      
+      .pagination .active {
+        background-color: #FDB300;
+        color: white;
+        border: 1px solid #FDB300;
+      }
+      
+      .pagination .disabled {
+        color: #ddd;
+        cursor: not-allowed;
+      }
     </style>
   </head>
 
@@ -65,20 +129,19 @@
     <!-- ***** Preloader End ***** -->
 
     <!-- Header -->
-    <div class="sub-header">
+    <div class="sub-header" style="	background-color: #fff;">
       <div class="container">
         <div class="row">
           <div class="col-md-12">
                             <ul class="right-icons" id="language-buttons">
-
-                            <li><a id="fr-button" style="cursor:pointer;">Français</a></li>
-                            <li><a id="en-button" style="cursor:pointer;">English</a></li>
+                            <li class="gtranslate_wrapper"></li>
             </ul>
           </div>
         </div>
       </div>
     </div>
-
+    <script>window.gtranslateSettings = {"default_language":"fr","detect_browser_language":true,"languages":["fr","en"],"wrapper_selector":".gtranslate_wrapper","flag_size":24,"horizontal_position":"right","vertical_position":"top","flag_style":"3d"}</script>
+    <script src="https://cdn.gtranslate.net/widgets/latest/fn.js" defer></script>
     <header class="">
       <nav class="navbar navbar-expand-lg">
         <div class="container">
@@ -98,18 +161,22 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto ">
-            <li class="nav-item active"><a class="nav-link" href="index.php" id="home"></a></li>
-            <li class="nav-item "><a class="nav-link" href="about.php" id="about"></a></li>
-            <li class="nav-item"><a class="nav-link" href="services.php" id="services"></a></li>
-            <li class="nav-item"><a class="nav-link" href="contact.php" id="contact"></a></li>
-            <a class="btn-getstarted" href="index.php#about" id="donate"></a>
+            <li class="nav-item active"><a class="nav-link" href="index.php" id="home">Accueil</a></li>
+            <li class="nav-item "><a class="nav-link" href="about.php" id="about">A propos</a></li>
+            <li class="nav-item"><a class="nav-link" href="services.php" id="services">Services</a></li>
+            <li class="nav-item"><a class="nav-link" href="contact.php" id="contact">Contact</a></li>
+            <a class="btn-getstarted" href="index.php#about" id="donate">Faire un don</a>
+            <a id="admin-button" class="btn-getstarted btn d-flex align-items-center  ms-3" href="connexion.php">
+  <i class="fa fa-user-shield text-white"></i>
+  <span class="fw-medium small" style="margin-left: 10px;">Admin</span>
+    </a>
+            
           </ul>
           </div>
         </div>
       </nav>
     </header>
-
-    <!-- Page Content -->
+  <!-- Page Content -->
     <!-- Banner Starts Here -->
     <div class="main-banner header-text" id="top">
       <div class="Modern-Slider">
@@ -123,14 +190,14 @@
     </div>
     <!-- Banner Ends Here -->
      <!-- Objective Section Start -->
-    <div class="objective-section" >
+     <div class="objective-section" >
       <div class="container">
         <div class="row align-items-center">
           <!-- Objectives Section -->
           <div class="">
             <div class="section-heading content">
-              <h2 id="titre"></h2>
-              <p style="margin-top: 20px; font-size: 1.2em; color: #4e4f50; line-height: 1.8;" id="text"></p>              
+              <h2 id="titre">Notre <em>Objectif</em></h2>
+              <p style="margin-top: 20px; font-size: 1.2em; color: #4e4f50; line-height: 1.8;" id="text">La <strong style=\"color: #000;\">Fondation Divine Miséricorde (FDM)</strong> a pour objectif la promotion et la défense des initiatives citoyennes en faveur du bien-être, de la paix, la tolérance, le développement, la solidarité et la prospérité dans un espace durable.</p>              
             </div>
           </div>
         </div>
@@ -139,15 +206,15 @@
     
 <!-- Objective Section End -->
 
-    <!-- Services start -->
-    <div class="services">
+   <!-- Services start -->
+   <div class="services">
       <div class="container">
         <div class="row">
           <div class="col-md-12">
             <div class="section-heading heading_center">
-              <h2 id="titre2"></h2>
+              <h2 id="titre2">Nos <em>Domaines</em></h2>
               <span id="text2"
-                ></span
+                >Découvrez nos principaux domaines d'intervention, qui reflètent notre engagement envers un impact positif et durable.</span
               >
             </div>
           </div>
@@ -156,12 +223,12 @@
               <div class="service-item">
                 <img src="assets/images/sante.jpg" alt="" />
                 <div class="down-content">
-                  <h4 id="titre3"></h4>
+                  <h4 id="titre3">Santé</h4>
                   <p id="text3">
-                    
+                  Nous intervenons dans la promotion des Droits à la Santé Sexuelle et Reproductive des jeunes, la lutte contre toutes les formes de violence basées sur le genre, la prévention des grossesses en milieu scolaire.
                   </p>
                   <a href="services.php#tabs-1" class="filled-button" id="button1"
-                    ></a
+                    >Lire la suite</a
                   >
                 </div>
               </div>
@@ -170,12 +237,12 @@
               <div class="service-item">
                 <img src="assets/images/edu.jpg" alt="" />
                 <div class="down-content">
-                  <h4 class="mt-3" id="titre4"></h4>
+                  <h4 class="mt-3" id="titre4">Education</h4>
                   <p id="text4">
-                    
+                  Nous réalisons des campagnes de sensibilisation et de formation tant de notre personnel que de la population sur des thématiques données, afin de les outiller.
                   </p>
                   <a href="services.php#tabs-2" class="mt-3 filled-button"
-                  id="button2"></a
+                  id="button2">Lire la suite</a
                   >
                 </div>
               </div>
@@ -184,12 +251,12 @@
               <div class="service-item">
                 <img src="assets/images/91121.jpg" alt="" />
                 <div class="down-content">
-                  <h4 class="mt-3" id="titre5"></h4>
+                  <h4 class="mt-3" id="titre5">Environnement</h4>
                   <p id="text5">
-                    
+                  Protéger notre planète est une responsabilité partagée. Nous travaillons à la préservation des écosystèmes et à la sensibilisation environnementale.
                   </p>
                   <a href="services.php#tabs-3" class="mt-5 filled-button"
-                  id="button3"></a
+                  id="button3">Lire la suite</a
                   >
                 </div>
               </div>
@@ -198,12 +265,12 @@
               <div class="service-item">
                 <img src="assets/images/auto.jpg" alt="" />
                 <div class="down-content">
-                  <h4 id="titre6"></h4>
+                  <h4 id="titre6">Autonomisation des populations</h4>
                   <p id="text6">
-                    
+                  Nous œuvrons à rendre indépendants les populations par l'accompagnement des collectivités locales à travers la création d'Activités Génératrices de Revenus.
                   </p>
                   <a href="services.php#tabs-4" class="filled-button"
-                  id="button4"></a
+                  id="button4">Lire la suite</a
                   >
                 </div>
               </div>
@@ -212,10 +279,10 @@
               <div class="service-item">
                 <img src="assets/images/dev.jpg" alt="" />
                 <div class="down-content">
-                  <h4 id="titre7"></h4>
-                  <p id="text7"></p>
+                  <h4 id="titre7">Développement local</h4>
+                  <p id="text7">Nous tenons à créer un environnement participatif qui renforce les capacités des institutions locales pour la mise en place d'interventions socialement inclusives et pourvoyeuses d'emplois.</p>
                   <a href="services.php#tabs-5" class="filled-button"
-                  id="button5"></a
+                  id="button5">Lire la suite</a
                   >
                 </div>
               </div>
@@ -232,10 +299,10 @@
           <!-- Section gauche : Introduction des valeurs de l'entreprise -->
           <div class="col-md-6">
             <div class="left-content">
-              <span id="titre8"></span>
-              <h2 id="titre9"></em></h2>
+              <span id="titre8">Nos valeurs fondamentales</span>
+              <h2 id="titre9">Ce qui guide notre <em>réussite   </em></h2>
               <p id="text8">
-                
+              À <strong><em>La Fondation Divine Miséricorde</em></strong>, nos valeurs sont les piliers de notre succès. Elles nous inspirent chaque jour à bâtir des relations solides et à offrir des services d'exception. Nous croyons fermement que la force d'une entreprise repose sur ses principes. Nos valeurs fondamentales représentent l'essence même de notre identité et sont au cœur de toutes nos actions. <br /><br /> Découvrez ce qui rend notre entreprise unique et pourquoi nous sommes votre partenaire idéal.
               </p>
             </div>
           </div>
@@ -246,17 +313,17 @@
               <div class="col-md-6">
                 <div class="count-area-content">
                   <div class="count"><i class="fa-solid fa-gavel"></i></div>
-                  <div class="count-title" id="titre10"></div>
+                  <div class="count-title" id="titre10">Discipline</div>
                   <p id="text9">
-                    
+                  Impulser au sein de notre équipe la détermination, l'amour du travail et la fraternité pour l'aider à remplir notre mission.
                   </p>
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="count-area-content">
                   <div class="count"><i class="fa-solid fa-handshake"></i></div>
-                  <div class="count-title" id="titre11"></div>
-                  <p id="text10"></p>
+                  <div class="count-title" id="titre11">Respect</div>
+                  <p id="text10">Respecter nos engagements, un impératif.</p>
                 </div>
               </div>
               <div class="col-md-6">
@@ -264,10 +331,9 @@
                   <div class="count">
                     <i class="fa fa-map-marker" aria-hidden="true"></i>
                   </div>
-                  <div class="count-title" id="titre12"></div>
-                  <p id="text11">
-                    
-                  </p>
+                  <div class="count-title" id="titre12">Proximité</div>
+                  <p id="text11">Etablir et maintenir une proximité avec les communautés de base et les populations.</p>
+
                 </div>
               </div>
               <div class="col-md-6">
@@ -275,10 +341,9 @@
                   <div class="count">
                     <i class="fa fa-heart" aria-hidden="true"></i>
                   </div>
-                  <div class="count-title" id="titre13"></div>
-                  <p id="text12">
-                    
-                  </p>
+                  <div class="count-title" id="titre13">Solidarité</div>
+                  <p id="text12">Solidarité au sein de la fondation, solidarité avec les populations locales.</p>
+
                 </div>
               </div>
               <div class="col-md-6">
@@ -286,8 +351,8 @@
                   <div class="count">
                     <i class="fa fa-share-alt" aria-hidden="true"></i>
                   </div>
-                  <div class="count-title" id="titre14"></div>
-                  <p id="text13"></p>
+                  <div class="count-title" id="titre14">Partage</div>
+                  <p id="text13">Partager nos expériences, nos victoires, nos erreurs.</p>
                 </div>
               </div>
               <div class="col-md-6">
@@ -295,10 +360,9 @@
                   <div class="count">
                     <i class="fa fa-eye" aria-hidden="true"></i>
                   </div>
-                  <div class="count-title" id="titre15"></div>
-                  <p id="text14">
-                    
-                  </p>
+                  <div class="count-title" id="titre15">Transparence</div>
+                  <p id="text14">Partager l'information avec les parties prenantes, de la manière la plus ouverte, honnête, précise et compréhensible  possible, qu'il s'agisse d'informations positives ou négatives.</p>
+
                 </div>
               </div>
             </div>
@@ -313,192 +377,79 @@
         <div class="row">
           <div class="col-md-12">
             <div class="section-heading heading_center">
-              <h2 id="titre16"></h2>
+              <h2 id="titre16">Nos <em>Activités</em></h2>
               <span id="text15"
-                ></span
+                >Ces activités sont le cœur de notre action, visant à améliorer la qualité de vie et à promouvoir un développement durable pour tous.</span
               >
             </div>
           </div>
         </div>
 
-        <!-- Cartes du haut -->
-        <div class="row equal-height">
+        <!-- Cartes des activités avec pagination -->
+        <div class="row equal-height" id="liste-activites">
+        <?php if($result->num_rows > 0): ?>
+          <?php while($row = $result->fetch_assoc()): ?>
           <div class="col-md-4">
             <div class="card mb-4 box-shadow">
               <img
                 class="card-img-top"
-                src="assets/images/Activité1/image.jpg"
-                alt="Activité 1"
+                src="<?= 'uploads/' . htmlspecialchars($row['image']) ?>"
+                alt="<?= htmlspecialchars($row['titre']) ?>"
               />
               <div class="card-body">
                 <p class="text-black">
                   <strong id="titre17">
-                    
-                  </strong>
+                  <?= htmlspecialchars($row['titre']) ?></strong>
                 </p>
                 <div class="d-flex justify-content-center align-items-center">
-                  <a href="Activité_sensibilisation.php" class="filled-button" id="button6"
-                    ></a
-                  >
+                  <a href="activite.php?slug=<?= urlencode($row['slug']) ?>" class="filled-button">Lire la suite</a>
                 </div>
               </div>
             </div>
           </div>
-
-          <div class="col-md-4">
-            <div class="card mb-4 box-shadow">
-              <img
-                class="card-img-top"
-                src="assets/images/Activité2/image.jpg"
-                alt="Activité 2"
-              />
-              <div class="card-body">
-                <p class="text-black">
-                  <strong id="titre18"
-                    ></strong
-                  >
-                </p>
-                <div class="d-flex justify-content-center align-items-center">
-                  <a href="Activité_gestion-projet.php" class="filled-button" id="button7"
-                    ></a
-                  >
-                </div>
-              </div>
-            </div>
+          <?php endwhile; ?>
+        <?php else: ?>
+          <div class="col-12 text-center">
+            <p>Aucune activité n'est disponible pour le moment.</p>
           </div>
-
-          <div class="col-md-4">
-            <div class="card mb-4 box-shadow">
-              <img
-                class="card-img-top"
-                src="assets/images/Activité3/image.jpg"
-                alt="Activité 3"
-              />
-              <div class="card-body">
-                <p class="text-black">
-                  <strong id="titre19"
-                    ></strong
-                  >
-                </p>
-                <div class="d-flex justify-content-center align-items-center">
-                  <a
-                    href="Activité_mission-chirurgicale.php"
-                    class="filled-button" id="button8"
-                    ></a
-                  >
-                </div>
-              </div>
-            </div>
-          </div>
+        <?php endif; ?>
         </div>
-
-        <!-- Cartes du bas -->
-        <div class="row equal-height mt-5">
-          <div class="col-md-4">
-            <div class="card mb-4 box-shadow">
-              <img
-                class="card-img-top"
-                src="assets/images/Activité4/image.jpg"
-                alt="Activité 4"
-              />
-              <div class="card-body">
-                <p class="text-black">
-                  <strong id="titre20"
-                    ></strong
-                  >
-                </p>
-                <div class="d-flex justify-content-center align-items-center">
-                  <a
-                    href="Activité_gestion-hospitalière.php"
-                    class="filled-button" id="button9"
-                    ></a
-                  >
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-4">
-            <div class="card mb-4 box-shadow">
-              <img
-                class="card-img-top"
-                src="assets/images/Activité5/6008046299892532262.jpg"
-                alt="Activité 5"
-              />
-              <div class="card-body">
-                <p class="text-black">
-                  <strong id="titre21"
-                    ></strong
-                  >
-                </p>
-                <div class="d-flex justify-content-center align-items-center">
-                  <a
-                    href="Activité_management-d'équipe.php"
-                    class="filled-button" id="button10"
-                    ></a
-                  >
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-4">
-            <div class="card mb-4 box-shadow">
-              <img
-                class="card-img-top"
-                src="assets/images/Activité6/image.jpg"
-                alt="Activité 6"
-              />
-              <div class="card-body">
-                <p class="text-black">
-                  <strong id="titre22"
-                    ></strong
-                  >
-                </p>
-                <div class="d-flex justify-content-center align-items-center">
-                  <a
-                    href="Activité_proctection des droits.php"
-                    class="filled-button" id="button11"
-                    ></a
-                  >
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="card mb-4 box-shadow">
-              <img
-                class="card-img-top"
-                src="assets/images/Activité7/image1.jpg"
-                alt="Activité 7"
-              />
-              <div class="card-body">
-                <p class="text-black">
-                  <strong id="titre23"
-                    ></strong
-                  >
-                </p>
-                <div class="d-flex justify-content-center align-items-center">
-                  <a
-                    href="Activite_mission-humanitaire.php"
-                    class="filled-button" id="button12"
-                    ></a
-                  >
-                </div>
-              </div>
-            </div>
-          </div>
+        
+        <!-- Pagination -->
+        <?php if($totalPages > 1): ?>
+        <div class="pagination">
+          <?php if($page > 1): ?>
+            <a href="index.php?page=<?= $page-1 ?>">&laquo; Précédent</a>
+          <?php else: ?>
+            <span class="disabled">&laquo; Précédent</span>
+          <?php endif; ?>
+          
+          <?php for($i = 1; $i <= $totalPages; $i++): ?>
+            <?php if($i == $page): ?>
+              <span class="active"><?= $i ?></span>
+            <?php else: ?>
+              <a href="index.php?page=<?= $i ?>"><?= $i ?></a>
+            <?php endif; ?>
+          <?php endfor; ?>
+          
+          <?php if($page < $totalPages): ?>
+            <a href="index.php?page=<?= $page+1 ?>">Suivant &raquo;</a>
+          <?php else: ?>
+            <span class="disabled">Suivant &raquo;</span>
+          <?php endif; ?>
         </div>
+        <?php endif; ?>
       </div>
     </div>
     <!-- activité end -->
+    
 
-    <!-- Footer Starts Here -->
-    <footer class="footer">
+     <!-- Footer Starts Here -->
+     <footer class="footer">
       <div class="container">
         <div class="row">
           <div class="col-md-3 footer-item ">
-            <h4 id="nom"></h4>
+            <h4 id="nom">Fondation Divine Miséricorde</h4>
             <ul class="social-icons">
               <li>
                 <a rel="nofollow" href="https://www.facebook.com/share/p/14dDtSat98/?mibextid=wwXIfr" target="_blank"><i class="fa fa-facebook"></i></a>
@@ -515,28 +466,28 @@
             </ul>
           </div>
           <div class="col-md-3 footer-item content">
-            <h4 id="lien"></h4>
+            <h4 id="lien">Liens</h4>
             <ul class="menu-list content">
-              <li><a href="index.php" id="home1"></a></li>
-              <li><a href="about.php" id="about1"></a></li>
-              <li><a href="services.php" id="services1"></a></li>
-              <li><a href="contact.php" id="contact1"></a></li>
+              <li><a href="index.php" id="home1">Accueil</a></li>
+              <li><a href="about.php" id="about1">A propos</a></li>
+              <li><a href="services.php" id="services1">Services</a></li>
+              <li><a href="contact.php" id="contact1">Contact</a></li>
             </ul>
           </div>
           <div class="col-md-3 footer-item footer-item2 content">
-            <h4 id="domaine"></h4>
+            <h4 id="domaine">Nos domaines</h4>
             <ul class="menu-list content">
-              <li><a href="services.php#tabs-1" id="serv1"></a></li>
-              <li><a href="services.php#tabs-2" id="serv2"></a></li>
-              <li><a href="services.php#tabs-3" id="serv3"></a></li>
-              <li><a href="services.php#tabs-4" id="serv4"></a></li>
-              <li><a href="services.php#tabs-5" id="serv5"></a></li>
+              <li><a href="services.php#tabs-1" id="serv1">Santé</a></li>
+              <li><a href="services.php#tabs-2" id="serv2">Education</a></li>
+              <li><a href="services.php#tabs-3" id="serv3">Environnement</a></li>
+              <li><a href="services.php#tabs-4" id="serv4">Autonomisation des populations</a></li>
+              <li><a href="services.php#tabs-5" id="serv5">Développement local</a></li>
             </ul>
           </div>
           <div class="col-md-3 footer-item last-item footer-newsletter">
             <div class="content">
-            <h4 id="lettre"></h4>
-            <p id="lettretext"></p>
+            <h4 id="lettre">Notre Newsletter</h4>
+            <p id="lettretext">Abonnez-vous à notre newsletter et recevez les dernières nouvelles !</p>
             </div>
             <form id="newsletter-form" class="php-email-form content">
               <div class="newsletter-form"><input type="email" name="email" required><input type="submit" id="subscribe-button" value="S'abonner"></div>
@@ -556,7 +507,7 @@
             <script>
               document.write(new Date().getFullYear());
             </script>
-            <strong id="texte"></strong>
+            <strong id="texte">Fondation Divine Miséricorde</strong>
           </p>
         </div>
       </div>
@@ -639,147 +590,72 @@ function validateEmail(email) {
 }
 </script>
 <script>
-  let translations = {};
+  // Récupération des éléments à manipuler
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialiser la pagination AJAX
+  initAjaxPagination();
+});
 
-// Charger les deux fichiers JSON de traductions
-Promise.all([
-    fetch('langue.json').then(response => response.json()),  // Premier fichier JSON
-    fetch('language.json').then(response => response.json())  // Deuxième fichier JSON
-])
-.then(([data1, data2]) => {
-    console.log("Fichier 1 chargé:", data1); // Vérification du premier fichier
-    console.log("Fichier 2 chargé:", data2); // Vérification du deuxième fichier
-
-    for (let lang in data1) {
-    translations[lang] = { ...data1[lang] }; // Crée un nouvel objet pour chaque langue
-  }
-
-  for (let lang in data2) {
-    if (translations[lang]) {
-      // Fusionner les données si la langue existe déjà
-      translations[lang] = { ...translations[lang], ...data2[lang] };
+function initAjaxPagination() {
+  // Attacher des écouteurs d'événements à tous les liens de pagination
+  document.querySelectorAll('.pagination a').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      // Récupérer le numéro de page depuis l'URL du lien
+      const url = new URL(this.href);
+      const page = url.searchParams.get('page');
+      
+      // Charger les activités de cette page via AJAX
+      loadActivitiesAjax(page);
+      
+      // Mettre à jour l'URL sans recharger la page 
+      window.history.pushState({page: page}, '', url.toString());
+    });
+  });
+  
+  // Gestion du bouton retour du navigateur
+  window.addEventListener('popstate', function(e) {
+    if (e.state && e.state.page) {
+      loadActivitiesAjax(e.state.page);
     } else {
-      // Si la langue n'existe pas, ajouter les données de data2
-      translations[lang] = { ...data2[lang] };
+      loadActivitiesAjax(1); // Page par défaut
     }
-  }
+  });
+}
 
-    // Vérification après fusion
-    console.log("Traductions fusionnées:", translations);
-
-    // Récupérer la langue à partir de l'URL ou de localStorage
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlLanguage = urlParams.get('lang');
-    const savedLanguage = localStorage.getItem('selectedLanguage') || 'fr'; // Par défaut 'fr'
-
-    // Utiliser la langue spécifiée dans l'URL ou celle stockée dans localStorage
-    const currentLanguage = urlLanguage || savedLanguage;
-    switchLanguage(currentLanguage);
-
-    // Mettre à jour l'URL si elle ne contient pas la langue
-    if (!urlLanguage) {
-        updateURLWithLanguage(currentLanguage);
-    }
-})
-.catch(error => console.error('Erreur de chargement des fichiers de traduction:', error));
-
-// Fonction pour changer la langue
-function switchLanguage(lang) {
-    const langData = translations[lang];
-    if (langData) {
-        // Mettre à jour tous les éléments du site avec les traductions
-        document.getElementById('home').textContent = langData.home;
-        document.getElementById('about').textContent = langData.about;
-        document.getElementById('services').textContent = langData.services;
-        document.getElementById('contact').textContent = langData.contact;
-        document.getElementById('home1').textContent = langData.home;
-        document.getElementById('about1').textContent = langData.about;
-        document.getElementById('services1').textContent = langData.services;
-        document.getElementById('contact1').textContent = langData.contact;
-        document.getElementById('donate').textContent = langData.donate;
-        document.getElementById('serv1').textContent = langData.serv1;
-        document.getElementById('serv2').textContent = langData.serv2;
-        document.getElementById('serv3').textContent = langData.serv3;
-        document.getElementById('serv4').textContent = langData.serv4;
-        document.getElementById('serv5').textContent = langData.serv5;
-        document.getElementById('lien').textContent = langData.lien;
-        document.getElementById('domaine').textContent = langData.domaine;
-        document.getElementById('nom').textContent = langData.nom;
-        document.getElementById('texte').textContent = langData.texte;
-        document.getElementById('lettre').textContent = langData.lettre;
-        document.getElementById('lettretext').textContent = langData.lettretext;
-        document.getElementById('titre').innerHTML = langData.titre;
-        document.getElementById('text').innerHTML = langData.text;
-        document.getElementById('titre2').innerHTML = langData.titre2;
-        document.getElementById('text2').textContent = langData.text2;
-        document.getElementById('titre3').textContent = langData.titre3;
-        document.getElementById('text3').textContent = langData.text3;
-        document.getElementById('titre4').textContent = langData.titre4;
-        document.getElementById('text4').textContent = langData.text4;
-        document.getElementById('titre5').textContent = langData.titre5;
-        document.getElementById('text5').textContent = langData.text5;
-        document.getElementById('titre6').textContent = langData.titre6;
-        document.getElementById('text6').textContent = langData.text6;
-        document.getElementById('titre7').textContent = langData.titre7;
-        document.getElementById('text7').textContent = langData.text7;
-        document.getElementById('titre8').textContent = langData.titre8;
-        document.getElementById('text8').innerHTML = langData.text8;
-        document.getElementById('titre9').innerHTML = langData.titre9;
-        document.getElementById('text9').textContent = langData.text9;
-        document.getElementById('titre10').textContent = langData.titre10;
-        document.getElementById('titre11').textContent = langData.titre11;
-        document.getElementById('text10').textContent = langData.text10;
-        document.getElementById('titre12').textContent = langData.titre12;
-        document.getElementById('text11').textContent = langData.text11;
-        document.getElementById('titre13').textContent = langData.titre13;
-        document.getElementById('text12').textContent = langData.text12;
-        document.getElementById('titre14').textContent = langData.titre14;
-        document.getElementById('text13').textContent = langData.text13;
-        document.getElementById('titre15').textContent = langData.titre15;
-        document.getElementById('text14').textContent = langData.text14;
-        document.getElementById('titre16').innerHTML = langData.titre16;
-        document.getElementById('text15').textContent = langData.text15;
-        document.getElementById('titre17').textContent = langData.titre17;
-        document.getElementById('titre18').textContent = langData.titre18;
-        document.getElementById('titre19').textContent = langData.titre19;
-        document.getElementById('titre20').textContent = langData.titre20;
-        document.getElementById('titre21').textContent = langData.titre21;
-        document.getElementById('titre22').textContent = langData.titre22;
-        document.getElementById('button1').textContent = langData.button1;
-        document.getElementById('button2').textContent = langData.button2;
-        document.getElementById('button3').textContent = langData.button3;
-        document.getElementById('button4').textContent = langData.button4;
-        document.getElementById('button5').textContent = langData.button5;
-        document.getElementById('button6').textContent = langData.button6;
-        document.getElementById('button7').textContent = langData.button7;
-        document.getElementById('button8').textContent = langData.button8;
-        document.getElementById('button9').textContent = langData.button9;
-        document.getElementById('button10').textContent = langData.button10;
-        document.getElementById('button11').textContent = langData.button11;
-        document.getElementById('subscribe-button').value = langData.subscribe;
+function loadActivitiesAjax(page) {
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', 'ajax-activities.php?page=' + page, true);
+  
+  xhr.onload = function() {
+    if (this.status === 200) {
+      try {
+        const response = JSON.parse(this.responseText);
         
-        document.getElementById('titre23').textContent = langData.titre23;
-        document.getElementById('button12').textContent = langData.button12;
-
-        // Stocke la langue choisie dans localStorage
-        localStorage.setItem('selectedLanguage', lang);
-
-        // Met à jour l'URL pour inclure la langue
-        updateURLWithLanguage(lang);
+        // Mettre à jour la liste des activités
+        document.getElementById('liste-activites').innerHTML = response.activitiesHtml;
+        
+        // Mettre à jour la pagination
+        document.querySelector('.pagination').innerHTML = response.paginationHtml;
+        
+        // Réinitialiser les écouteurs d'événements sur les nouveaux liens
+        initAjaxPagination();
+        
+        // Faire défiler jusqu'au début de la section des activités
+        document.getElementById('liste-activites').scrollIntoView({behavior: 'smooth'});
+      } catch (e) {
+        console.error('Erreur de parsing JSON:', e);
+      }
     }
+  };
+  
+  xhr.onerror = function() {
+    console.error('Erreur de connexion AJAX');
+  };
+  
+  xhr.send();
 }
-
-// Fonction pour mettre à jour l'URL avec le paramètre de langue
-function updateURLWithLanguage(lang) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('lang', lang);
-    window.history.replaceState({}, '', url); // Mettre à jour l'URL sans recharger la page
-}
-
-// Écouteurs pour les boutons de langue
-document.getElementById('fr-button').addEventListener('click', () => switchLanguage('fr'));
-document.getElementById('en-button').addEventListener('click', () => switchLanguage('en'));
-
 </script>
 
   </body>

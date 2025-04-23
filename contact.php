@@ -52,21 +52,20 @@ https://templatemo.com/tm-545-finance-business
     <!-- ***** Preloader End ***** -->
 
     <!-- Header -->
-    <div class="sub-header">
-    <div class="container">
+    <div class="sub-header" style="	background-color: #fff;">
+      <div class="container">
         <div class="row">
-            <div class="col-md-12">
-                                <ul class="right-icons" id="language-buttons">
-
-                                <li><a id="fr-button" style="cursor:pointer;">Français</a></li>
-                                <li><a id="en-button" style="cursor:pointer;">English</a></li>
-                </ul>
-            </div>
+          <div class="col-md-12">
+                            <ul class="right-icons" id="language-buttons">
+                            <li class="gtranslate_wrapper"></li>
+            </ul>
+          </div>
         </div>
+      </div>
     </div>
-</div>
-
-    <header class="">
+    <script>window.gtranslateSettings = {"default_language":"fr","detect_browser_language":true,"languages":["fr","en"],"wrapper_selector":".gtranslate_wrapper","flag_size":24,"horizontal_position":"right","vertical_position":"top","flag_style":"3d"}</script>
+    <script src="https://cdn.gtranslate.net/widgets/latest/fn.js" defer></script>
+  <header class="">
       <nav class="navbar navbar-expand-lg">
         <div class="container">
           <a class="navbar-brand" href="index.php">            
@@ -85,11 +84,11 @@ https://templatemo.com/tm-545-finance-business
           </button>
           <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto ">
-            <li class="nav-item"><a class="nav-link" href="index.php" id="home"></a></li>
-            <li class="nav-item "><a class="nav-link" href="about.php" id="about"></a></li>
-            <li class="nav-item"><a class="nav-link" href="services.php" id="services"></a></li>
-            <li class="nav-item active"><a class="nav-link" href="contact.php" id="contact"></a></li>
-            <a class="btn-getstarted" href="index.php#about" id="donate"></a>
+            <li class="nav-item "><a class="nav-link" href="index.php" id="home">Accueil</a></li>
+            <li class="nav-item "><a class="nav-link" href="about.php" id="about">A propos</a></li>
+            <li class="nav-item "><a class="nav-link" href="services.php" id="services">Services</a></li>
+            <li class="nav-item active"><a class="nav-link" href="contact.php" id="contact">Contact</a></li>
+            <a class="btn-getstarted" href="index.php#about" id="donate">Faire un don</a>
           </ul>
           </div>
         </div>
@@ -101,8 +100,8 @@ https://templatemo.com/tm-545-finance-business
       <div class="container">
         <div class="row">
           <div class="col-md-12 content">
-            <h1 id="about-title1"></h1>
-            <span id="about-text1"></span>
+            <h1 id="about-title1">Contactez-nous</h1>
+            <span id="about-text1">N'hésitez pas à nous envoyer un message maintenant !</span>
           </div>
         </div>
       </div>
@@ -114,25 +113,25 @@ https://templatemo.com/tm-545-finance-business
           <div class="col-md-4">
             <div class="contact-item">
               <i class="fa fa-phone"></i>
-              <h4 id="about-title2"></h4>
-              <p id="about-text2"></p>
+              <h4 id="about-title2">Téléphone</h4>
+              <p id="about-text2">Appelez-nous pour toute information ou assistance.</p>
               <a href="#">0161595896 / 0164423601  </a>
             </div>
           </div>
           <div class="col-md-4">
             <div class="contact-item">
               <i class="fa fa-envelope"></i>
-              <h4 id="about-title3"></h4>
-              <p id="about-text3"></p>
+              <h4 id="about-title3">Email</h4>
+              <p id="about-text3">Envoyez-nous un email pour vos questions ou suggestions.</p>
               <a href="#">fondationdivinemisericorde2024@gmail.com</a>
             </div>
           </div>
           <div class="col-md-4">
             <div class="contact-item">
               <i class="fa fa-map-marker"></i>
-              <h4 id="about-title4"></h4>
-              <p id="about-text4"></p><br>
-              <a href="#" id="about-text5"></a>
+              <h4 id="about-title4">Adresse</h4>
+              <p id="about-text4">Quartier Tankpè, Maison Vincent AHO</p><br>
+              <a href="#" id="about-text5">Afficher sur Google Maps</a>
             </div>
           </div>
         </div>
@@ -144,7 +143,7 @@ https://templatemo.com/tm-545-finance-business
         <div class="row">
           <div class="col-md-12">
             <div class="section-heading content">
-              <h2 id="about-title5"></h2>
+              <h2 id="about-title5">Envoyez vos <em>messages</em></h2>
             </div>
           </div>
           <div class="col-md-12">
@@ -153,27 +152,27 @@ https://templatemo.com/tm-545-finance-business
                 <div class="row">
                   <div class="col-lg-4 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="name" type="text" class="form-control" id="name" placeholder="Nom"  required="">
+                      <input name="name" type="text" class="form-control"  placeholder="Nom"  required="">
                     </fieldset>
                   </div>
                   <div class="col-lg-4 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="email" type="text" class="form-control" id="email" pattern="[^ @]*@[^ @]*" placeholder="Email" required="">
+                      <input name="email" type="text" class="form-control"  pattern="[^ @]*@[^ @]*" placeholder="Email" required="">
                     </fieldset>
                   </div>
                   <div class="col-lg-4 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="subject" type="text" class="form-control" id="subject" placeholder="Objet" required="">
+                      <input name="subject" type="text" class="form-control"  placeholder="Objet" required="">
                     </fieldset>
                   </div>
                   <div class="col-lg-12">
                     <fieldset>
-                      <textarea name="message" rows="6" class="form-control" id="message" placeholder="Votre Message" required=""></textarea>
+                      <textarea name="message" rows="6" class="form-control"  placeholder="Votre Message" required=""></textarea>
                     </fieldset>
                   </div>
                   <div class="col-lg-12">
                     <fieldset>
-                      <button type="submit" id="form-submit" class="border-button" style="background-color: black;"></button>
+                      <button type="submit" id="form-submit" class="border-button" style="background-color: black;">Envoyer Message</button>
                     </fieldset>
                   </div>
                 </div>
@@ -220,56 +219,56 @@ https://templatemo.com/tm-545-finance-business
 
     <!-- Footer Starts Here -->
     <footer class="footer">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-3 footer-item ">
-          <h4 id="nom"></h4>
-          <ul class="social-icons">
-            <li>
-              <a rel="nofollow" href="https://www.facebook.com/share/p/14dDtSat98/?mibextid=wwXIfr" target="_blank"><i class="fa fa-facebook"></i></a>
-            </li>
-            <li>
-              <a href="#"><i class="fa fa-twitter"></i></a>
-            </li>
-            <li>
-              <a href="#"><i class="fa fa-linkedin"></i></a>
-            </li>
-            <li>
-              <a href="#"><i class="fa fa-instagram"></i></a>
-            </li>
-          </ul>
-        </div>
-        <div class="col-md-3 footer-item content">
-          <h4 id="lien"></h4>
-          <ul class="menu-list content">
-            <li><a href="index.php" id="home1"></a></li>
-            <li><a href="about.php" id="about1"></a></li>
-            <li><a href="services.php" id="services1"></a></li>
-            <li><a href="contact.php" id="contact1"></a></li>
-          </ul>
-        </div>
-        <div class="col-md-3 footer-item footer-item2 content">
-          <h4 id="domaine"></h4>
-          <ul class="menu-list content">
-            <li><a href="services.php#tabs-1" id="serv1"></a></li>
-            <li><a href="services.php#tabs-2" id="serv2"></a></li>
-            <li><a href="services.php#tabs-3" id="serv3"></a></li>
-            <li><a href="services.php#tabs-4" id="serv4"></a></li>
-            <li><a href="services.php#tabs-5" id="serv5"></a></li>
-          </ul>
-        </div>
-        <div class="col-md-3 footer-item last-item footer-newsletter">
-          <div class="content">
-          <h4 id="lettre"></h4>
-          <p id="lettretext"></p>
+      <div class="container">
+        <div class="row">
+          <div class="col-md-3 footer-item ">
+            <h4 id="nom">Fondation Divine Miséricorde</h4>
+            <ul class="social-icons">
+              <li>
+                <a rel="nofollow" href="https://www.facebook.com/share/p/14dDtSat98/?mibextid=wwXIfr" target="_blank"><i class="fa fa-facebook"></i></a>
+              </li>
+              <li>
+                <a href="#"><i class="fa fa-twitter"></i></a>
+              </li>
+              <li>
+                <a href="#"><i class="fa fa-linkedin"></i></a>
+              </li>
+              <li>
+                <a href="#"><i class="fa fa-instagram"></i></a>
+              </li>
+            </ul>
           </div>
-          <form id="newsletter-form" class="php-email-form content">
-            <div class="newsletter-form"><input type="email" name="email" required><input type="submit" id="subscribe-button" value="S'abonner"></div>
-          </form>
+          <div class="col-md-3 footer-item content">
+            <h4 id="lien">Liens</h4>
+            <ul class="menu-list content">
+              <li><a href="index.php" id="home1">Accueil</a></li>
+              <li><a href="about.php" id="about1">A propos</a></li>
+              <li><a href="services.php" id="services1">Services</a></li>
+              <li><a href="contact.php" id="contact1">Contact</a></li>
+            </ul>
+          </div>
+          <div class="col-md-3 footer-item footer-item2 content">
+            <h4 id="domaine">Nos domaines</h4>
+            <ul class="menu-list content">
+              <li><a href="services.php#tabs-1" id="serv1">Santé</a></li>
+              <li><a href="services.php#tabs-2" id="serv2">Education</a></li>
+              <li><a href="services.php#tabs-3" id="serv3">Environnement</a></li>
+              <li><a href="services.php#tabs-4" id="serv4">Autonomisation des populations</a></li>
+              <li><a href="services.php#tabs-5" id="serv5">Développement local</a></li>
+            </ul>
+          </div>
+          <div class="col-md-3 footer-item last-item footer-newsletter">
+            <div class="content">
+            <h4 id="lettre">Notre Newsletter</h4>
+            <p id="lettretext">Abonnez-vous à notre newsletter et recevez les dernières nouvelles !</p>
+            </div>
+            <form id="newsletter-form" class="php-email-form content">
+              <div class="newsletter-form"><input type="email" name="email" required><input type="submit" value="S'abonner"></div>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
-  </footer>
+    </footer>
 
 
   <div class="sub-footer">
@@ -281,7 +280,7 @@ https://templatemo.com/tm-545-finance-business
             <script>
               document.write(new Date().getFullYear());
             </script>
-            <strong id="texte"></strong>
+            <strong id="texte">Fondation Divine Miséricorde</strong>
           </p>
         </div>
       </div>
@@ -431,92 +430,7 @@ function validateEmail(email) {
     return regex.test(email);
 }
 </script>
-<script>
-  let translations = {};
 
-  // Charger le fichier JSON de traductions
-  fetch('translations.json')
-    .then(response => response.json())
-    .then(data => {
-      translations = data; // Stocke les traductions dans l'objet
-
-      // Récupère la langue à partir de l'URL ou de localStorage
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlLanguage = urlParams.get('lang');
-      const savedLanguage = localStorage.getItem('selectedLanguage') || 'fr'; // Défaut : 'fr'
-
-      // Si une langue est spécifiée dans l'URL, utiliser celle-ci
-      const currentLanguage = urlLanguage || savedLanguage;
-      switchLanguage(currentLanguage);
-
-      // Met à jour l'URL si elle ne contient pas la langue
-      if (!urlLanguage) {
-        updateURLWithLanguage(currentLanguage);
-      }
-    })
-    .catch(error => console.error('Erreur de chargement du fichier de traduction:', error));
-
-  // Fonction pour changer la langue
-  function switchLanguage(lang) {
-    const langData = translations[lang];
-    if (langData) {
-      // Mettre à jour tous les éléments du site avec les traductions
-      document.getElementById('home').textContent = langData.home;
-      document.getElementById('about').textContent = langData.about;
-      document.getElementById('services').textContent = langData.services;
-      document.getElementById('contact').textContent = langData.contact;
-      document.getElementById('home1').textContent = langData.home;
-      document.getElementById('about1').textContent = langData.about;
-      document.getElementById('services1').textContent = langData.services;
-      document.getElementById('contact1').textContent = langData.contact;
-      document.getElementById('donate').textContent = langData.donate;
-      document.getElementById('about-title1').textContent = langData["about-title1"];
-      document.getElementById('about-text1').innerHTML = langData["about-text1"];
-      document.getElementById('about-title2').textContent = langData["about-title2"];
-      document.getElementById('about-text2').innerHTML = langData["about-text2"];
-      document.getElementById('about-title3').textContent = langData["about-title3"];
-      document.getElementById('about-text3').innerHTML = langData["about-text3"];
-      document.getElementById('about-title4').textContent = langData["about-title4"];
-      document.getElementById('about-text4').innerHTML = langData["about-text4"];
-      document.getElementById('about-title5').innerHTML = langData["about-title5"];
-      document.getElementById('serv1').textContent = langData.serv1;
-      document.getElementById('serv2').textContent = langData.serv2;
-      document.getElementById('serv3').textContent = langData.serv3;
-      document.getElementById('serv4').textContent = langData.serv4;
-      document.getElementById('serv5').textContent = langData.serv5;
-      document.getElementById('lien').textContent = langData.lien;
-      document.getElementById('domaine').textContent = langData.domaine;
-      document.getElementById('nom').textContent = langData.nom;
-      document.getElementById('texte').textContent = langData.texte;
-      document.getElementById('lettre').textContent = langData.lettre;
-      document.getElementById('lettretext').textContent = langData.lettretext;
-      document.getElementById('subscribe-button').value = langData.subscribe;
-      document.getElementById('about-text5').innerHTML = langData["about-text5"];
-      document.getElementById('name').placeholder= langData.name;
-      document.getElementById('email').placeholder = langData.email;
-      document.getElementById('subject').placeholder = langData.subject;
-      document.getElementById('message').placeholder = langData.message;
-      document.getElementById('form-submit').textContent = langData.submit;
-
-      // Stocke la langue choisie dans localStorage
-      localStorage.setItem('selectedLanguage', lang);
-
-      // Met à jour l'URL pour inclure la langue
-      updateURLWithLanguage(lang);
-    }
-  }
-
-  // Fonction pour mettre à jour l'URL avec le paramètre de langue
-  function updateURLWithLanguage(lang) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('lang', lang);
-    window.history.replaceState({}, '', url); // Met à jour l'URL sans recharger la page
-  }
-
-  // Écouteurs pour les boutons de langue
-  document.getElementById('fr-button').addEventListener('click', () => switchLanguage('fr'));
-  document.getElementById('en-button').addEventListener('click', () => switchLanguage('en'));
-</script>
 <script>
   $(document).ready(function(){
   $(".owl-partners").owlCarousel({

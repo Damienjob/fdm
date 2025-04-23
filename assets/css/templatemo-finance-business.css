@@ -179,7 +179,7 @@ a.border-button:hover {
 .sub-header {
 	background-color: #fff;
 	line-height: 46px;
-	padding: 0 15px; /* Ajout de padding pour éviter que le contenu touche les bords */
+	padding: 0 10px; /* Ajout de padding pour éviter que le contenu touche les bords */
   }
   
   .sub-header ul {
@@ -211,17 +211,16 @@ a.border-button:hover {
 /* Header Style */
 header {
 	position: absolute;
-	z-index: 99999;
 	width: 100%;
 	background-color:#fff!important;
-	height: 80px;
+	height: 50px;
 	-webkit-transition: all 0.3s ease-in-out 0s;
     -moz-transition: all 0.3s ease-in-out 0s;
     -o-transition: all 0.3s ease-in-out 0s;
     transition: all 0.3s ease-in-out 0s;
 }
 header .navbar {
-	padding: 10px 0px;
+	padding: 4px 0px;
 }
 
 header .btn-getstarted,

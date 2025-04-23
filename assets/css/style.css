@@ -263,14 +263,14 @@ header {
 	z-index: 99999;
 	width: 100%;
 	background-color:#fff!important;
-	height: 80px;
+	height: 50px;
 	-webkit-transition: all 0.3s ease-in-out 0s;
     -moz-transition: all 0.3s ease-in-out 0s;
     -o-transition: all 0.3s ease-in-out 0s;
     transition: all 0.3s ease-in-out 0s;
 }
 header .navbar {
-	padding: 10px 0px;
+	padding: 4px 0px;
 }
 /* Style de base */
 header .btn-getstarted,
