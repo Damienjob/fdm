@@ -62,7 +62,26 @@ if ($emailsResult && $emailsResult->num_rows > 0) {
     $emails[] = $row;
   }
 }
+// Configuration de la pagination pour les publications
+$pubsPerPage = 5; // Nombre de publications par page
+$pubPage = isset($_GET['pub_page']) ? intval($_GET['pub_page']) : 1;
+$pubOffset = ($pubPage - 1) * $pubsPerPage;
 
+// Compter le nombre total de publications
+$countPubSql = "SELECT COUNT(*) as total FROM publications";
+$countPubResult = $conn->query($countPubSql);
+$totalPublications = $countPubResult->fetch_assoc()['total'];
+$totalPubPages = ceil($totalPublications / $pubsPerPage);
+
+// Récupération des publications avec pagination
+$pubSql = "SELECT * FROM publications ORDER BY date_creation DESC LIMIT $pubOffset, $pubsPerPage";
+$pubResult = $conn->query($pubSql);
+$publications = [];
+if ($pubResult && $pubResult->num_rows > 0) {
+  while ($row = $pubResult->fetch_assoc()) {
+    $publications[] = $row;
+  }
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -105,6 +124,231 @@ if ($emailsResult && $emailsResult->num_rows > 0) {
     
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/jpg" href="assets/images/logo.jpg">
+    <style>
+        
+        /* Modal Styles */
+        .modalpubli {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modalpubli.show {
+            display: flex !important; /* Force l'affichage même si autre CSS interfère */
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content-publi {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease;
+            position: relative; /* Assure que le modal reste au-dessus */
+            z-index: 1001; /* Z-index plus élevé */
+        }
+        
+        .modal-header-publi {
+            background: linear-gradient(135deg, #19cdfe 0%, #0ea5e9 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .modal-header-publi h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .close-btn-publi {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+        
+        .close-btn-publi:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .modal-body-publi {
+            padding: 40px;
+        }
+        
+        .form-group-publi {
+            margin-bottom: 25px;
+        }
+        
+        .form-group-publi label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group-publi input[type="text"],
+        .form-group-publi select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .form-group-publi input[type="text"]:focus,
+        .form-group-publi select:focus {
+            outline: none;
+            border-color: #19cdfe;
+        }
+        
+        .file-input-container-publi {
+            position: relative;
+            overflow: hidden;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .file-input-container-publi:hover {
+            border-color: #19cdfe;
+            background: #f0fbff;
+        }
+        
+        .file-input-container-publi input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .file-icon-publi {
+            font-size: 3rem;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+        
+        .file-text-publi {
+            color: #6c757d;
+            font-size: 16px;
+        }
+        
+        .file-selected-publi {
+            color: #19cdfe;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .submit-btn-publi {
+            width: 100%;
+            background: linear-gradient(135deg, #19cdfe 0%, #0ea5e9 100%);
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .submit-btn-publi:hover {
+            transform: translateY(-2px);
+        }
+        
+        .submit-btn-publi:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .progress-bar-publi {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin-top: 20px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .progress-fill-publi {
+            height: 100%;
+            background: linear-gradient(135deg, #19cdfe 0%, #0ea5e9 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(50px) scale(0.9);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .modal-content-publi {
+                width: 95%;
+                margin: 20px;
+            }
+            
+            .modal-body-publi {
+                padding: 20px;
+            }
+        }
+
+        /* Corrections pour éviter les conflits */
+        .modalpubli * {
+            box-sizing: border-box;
+        }
+        
+        /* Override pour forcer l'affichage */
+        .modalpubli.show {
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+    </style>
   </head>
   <body>
     <!-- Header -->
@@ -135,26 +379,32 @@ if ($emailsResult && $emailsResult->num_rows > 0) {
     </header>
     <!-- Main Content -->
     <main class="container mx-auto px-4 pt-24 pb-10">
-      <!-- Navigation Tabs -->
-      <div class="mb-6 border-b border-gray-200">
+    <!-- Navigation Tabs -->
+    <div class="mb-6 border-b border-gray-200">
         <nav class="flex -mb-px">
-          <a href="?tab=activities" class="<?php echo $activeTab == 'activities' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?> whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm mr-8 flex items-center">
-            <div class="w-5 h-5 flex items-center justify-center mr-2">
-              <i class="ri-calendar-event-line"></i>
-            </div>
-            Activités
-          </a>
-          <a href="?tab=emails" class="<?php echo $activeTab == 'emails' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?> whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm flex items-center">
-            <div class="w-5 h-5 flex items-center justify-center mr-2">
-              <i class="ri-mail-line"></i>
-            </div>
-            Emails
-          </a>
+            <a href="?tab=activities" class="<?php echo $activeTab == 'activities' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?> whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm mr-8 flex items-center">
+                <div class="w-5 h-5 flex items-center justify-center mr-2">
+                    <i class="ri-calendar-event-line"></i>
+                </div>
+                Activités
+            </a>
+            <a href="?tab=emails" class="<?php echo $activeTab == 'emails' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?> whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm flex items-center">
+                <div class="w-5 h-5 flex items-center justify-center mr-2">
+                    <i class="ri-mail-line"></i>
+                </div>
+                Emails
+            </a>
+            <a href="?tab=publications" class="<?php echo $activeTab == 'publications' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?> whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm flex items-center">
+                <div class="w-5 h-5 flex items-center justify-center mr-2">
+                    <i class="ri-movie-line"></i>
+                </div>
+                Publications
+            </a>
         </nav>
-      </div>
-      
-      <?php if ($activeTab == 'activities'): ?>
-      <!-- Activities Tab Content -->
+    </div>
+    
+    <?php if ($activeTab == 'activities'): ?>
+        <!-- Activities Tab Content -->
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Gestion des Activités</h2>
         <button
@@ -166,6 +416,7 @@ if ($emailsResult && $emailsResult->num_rows > 0) {
           </div>
           Ajouter une activité
         </button>
+        
       </div>
       
       <!-- Activities Table -->
@@ -285,8 +536,9 @@ if ($emailsResult && $emailsResult->num_rows > 0) {
         </div>
         <?php endif; ?>
       </div>
-      <?php elseif ($activeTab == 'emails'): ?>
-      <!-- Emails Tab Content -->
+    
+    <?php elseif ($activeTab == 'emails'): ?>
+        <!-- Emails Tab Content -->
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Liste des Abonnés</h2>
         <div class="flex gap-2">
@@ -425,8 +677,178 @@ if ($emailsResult && $emailsResult->num_rows > 0) {
           </div>
         </div>
       </div>
+   
+    <?php elseif ($activeTab == 'publications'): ?>
+        <!-- Publications Tab Content -->
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Gestion des Publications</h2>
+            <button
+        onclick="openModalPublication()"
+        class="bg-primary text-black px-4 py-2 rounded-button font-medium hover:bg-opacity-90 transition whitespace-nowrap !rounded-button flex items-center"
+        style="padding: 12px 16px; color: black; border: none; cursor: pointer; display: inline-flex; align-items: center;"
+    >
+        <div class="w-5 h-5 flex items-center justify-center mr-1" style="width: 20px; height: 20px; margin-right: 8px;">
+            <i class="ri-add-line"></i>
+        </div>
+        Ajouter une publication vidéo
+    </button>
+        </div>
+        
+        <!-- Publications Grid View -->
+      <?php if (!empty($publications)): ?>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <?php foreach ($publications as $pub): ?>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+              <!-- Media Container -->
+              <div class="relative aspect-video bg-gray-100">
+                
+                  <!-- Video Player -->
+                  <div class="w-full h-full flex items-center justify-center">
+                    <video class="w-full h-full object-cover" controls>
+                      <source src="<?= htmlspecialchars($pub['video_path']) ?>">
+                      Votre navigateur ne supporte pas les vidéos.
+                    </video>
+                  </div>
+                
+              </div>
+              
+              <!-- Publication Info -->
+              <div class="p-4">
+                <h3 class="font-bold text-lg text-gray-800 mb-1 ">
+                  <?= htmlspecialchars($pub['titre']) ?>
+                </h3>
+                
+                <div class="flex justify-between items-center mt-3">
+                  <!-- Date -->
+                  <span class="text-sm text-gray-500">
+                    <?= date('d/m/Y', strtotime($pub['date_creation'])) ?>
+                  </span>
+                  <div class="flex justify-end space-x-2 mt-4">
+                  <!-- Status -->
+                  <span class="px-2 py-1 <?= $pub['statut'] === 'actif' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' ?> rounded-full text-xs font-medium">
+                    <?= htmlspecialchars($pub['statut']) ?>
+                  </span>
+                  <button
+                    class="delete-pub-btn w-8 h-8 bg-red-50 rounded-full flex items-center justify-center text-red-600 hover:bg-red-100"
+                    data-id="<?= $pub['id'] ?>"
+                    title="Supprimer"
+                  >
+                    <i class="ri-delete-bin-line"></i>
+                  </button>
+                  </div>
+                </div>
+                
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php else: ?>
+        <!-- Empty State -->
+        <div class="bg-white rounded-lg shadow-sm p-8 text-center">
+          <div class="mx-auto w-16 h-16 flex items-center justify-center bg-gray-100 rounded-full mb-4">
+            <i class="ri-article-line text-gray-400 text-2xl"></i>
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 mb-1">Aucune publication</h3>
+          <p class="text-gray-500 mb-6">Commencez par ajouter votre première publication</p>
+          
+        </div>
       <?php endif; ?>
-    </main>
+      
+      <!-- Pagination for Publications -->
+      <?php if ($totalPubPages > 1): ?>
+        <div class="mt-8 px-4 py-5 border-t border-gray-200 flex justify-between items-center">
+          <div class="text-sm text-gray-600">
+            Affichage de <?= min($pubsPerPage * ($pubPage - 1) + 1, $totalPublications) ?> à <?= min($pubsPerPage * $pubPage, $totalPublications) ?> sur <?= $totalPublications ?> publications
+          </div>
+          <div class="flex space-x-1">
+            <?php if ($pubPage > 1): ?>
+              <a href="?tab=publications&pub_page=<?= $pubPage-1 ?>" class="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 hover:bg-gray-100">
+                <i class="ri-arrow-left-s-line"></i>
+              </a>
+            <?php endif; ?>
+            
+            <?php
+            $startPage = max(1, min($pubPage - 2, $totalPubPages - 4));
+            $endPage = min($totalPubPages, max($pubPage + 2, 5));
+            
+            if ($endPage - $startPage < 4) {
+              $startPage = max(1, $endPage - 4);
+            }
+            
+            for ($i = $startPage; $i <= $endPage; $i++): 
+            ?>
+              <a href="?tab=publications&pub_page=<?= $i ?>" class="w-8 h-8 flex items-center justify-center rounded-full <?= $i == $pubPage ? 'bg-primary text-white' : 'border border-gray-300 hover:bg-gray-100' ?>">
+                <?= $i ?>
+              </a>
+            <?php endfor; ?>
+            
+            <?php if ($pubPage < $totalPubPages): ?>
+              <a href="?tab=publications&pub_page=<?= $pubPage+1 ?>" class="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 hover:bg-gray-100">
+                <i class="ri-arrow-right-s-line"></i>
+              </a>
+            <?php endif; ?>
+          </div>
+        </div>
+      <?php endif; ?>
+      <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion de la suppression des publications
+    document.querySelectorAll('.delete-pub-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const pubId = this.getAttribute('data-id');
+            
+            Swal.fire({
+                title: 'Confirmer la suppression',
+                text: "Êtes-vous sûr de vouloir supprimer définitivement cette publication ?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Oui, supprimer',
+                cancelButtonText: 'Annuler'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Envoi de la requête AJAX
+                    fetch('delete_publication.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'id=' + pubId
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire(
+                                'Supprimé !',
+                                'La publication a été supprimée définitivement.',
+                                'success'
+                            ).then(() => {
+                                // Actualiser la page après suppression
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire(
+                                'Erreur',
+                                data.message || 'Une erreur est survenue lors de la suppression',
+                                'error'
+                            );
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire(
+                            'Erreur',
+                            'Problème de connexion au serveur',
+                            'error'
+                        );
+                    });
+                }
+            });
+        });
+    });
+});
+</script>
+<?php endif; ?>
+</main>
     
     <!-- Delete Email Confirmation Modal -->
     <div id="deleteEmailModal" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
@@ -1104,6 +1526,58 @@ if ($emailsResult && $emailsResult->num_rows > 0) {
         </div>
       </div>
     </div>
+   
+    <!-- Modal de Création de Publication -->
+    <div id="publicationModal" class="modalpubli">
+        <div class="modal-content-publi">
+            <div class="modal-header-publi">
+                <button class="close-btn-publi" onclick="closeModalPublication()">&times;</button>
+                <h2>📹 Créer une Publication</h2>
+                <p>Partagez votre contenu vidéo avec le monde</p>
+            </div>
+            
+            <div class="modal-body-publi">
+                <form action="ajout_publication.php" method="POST" enctype="multipart/form-data" id="publicationForm">
+                    
+                    <div class="form-group-publi">
+                        <label for="titre">📝 Titre de la publication *</label>
+                        <input type="text" id="titre" name="titre" required 
+                               placeholder="Entrez le titre de votre publication">
+                    </div>
+                    
+                    <div class="form-group-publi">
+                        <label for="video">🎬 Vidéo à publier *</label>
+                        <div class="file-input-container-publi" onclick="document.getElementById('video').click()">
+                            <input type="file" id="video" name="video" accept="video/*" required>
+                            <div class="file-icon-publi">📁</div>
+                            <div class="file-text-publi">
+                                Cliquez pour sélectionner une vidéo<br>
+                                <small>Formats acceptés: MP4, AVI, MOV, WMV, WEBM (Max: 100MB)</small>
+                            </div>
+                            <div class="file-selected-publi" id="selectedFile"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group-publi">
+                        <label for="statut">📊 Statut de la publication</label>
+                        <select id="statut" name="statut">
+                            <option value="actif">🟢 Actif (Publié)</option>
+                            <option value="inactif">🔴 Inactif (Brouillon)</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn-publi" id="submitBtn">
+                        🚀 Créer la Publication
+                    </button>
+                    
+                    <div class="progress-bar-publi" id="progressBar">
+                        <div class="progress-fill-publi" id="progressFill"></div>
+                    </div>
+                    
+                </form>
+            </div>
+        </div>
+    </div>
     <script src="script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
@@ -1124,185 +1598,81 @@ if ($emailsResult && $emailsResult->num_rows > 0) {
     });
   }
 </script>
-<script>
-  // Gestion de l'export d'emails
-document.addEventListener('DOMContentLoaded', function() {
-    // Export d'emails
-    const exportEmailsBtn = document.getElementById('exportEmailsBtn');
-    if (exportEmailsBtn) {
-        exportEmailsBtn.addEventListener('click', function() {
-            window.location.href = 'export_emails.php';
-        });
-    }
-
-    // Sélection d'emails
-    const selectAllEmails = document.getElementById('selectAllEmails');
-    const emailCheckboxes = document.querySelectorAll('.email-checkbox');
-    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
-
-    if (selectAllEmails) {
-        selectAllEmails.addEventListener('change', function() {
-            const isChecked = this.checked;
-            emailCheckboxes.forEach(checkbox => {
-                checkbox.checked = isChecked;
-            });
-            updateBulkDeleteButton();
-        });
-    }
-
-    emailCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', updateBulkDeleteButton);
-    });
-
-    // Mise à jour du bouton de suppression en masse
-    function updateBulkDeleteButton() {
-        const checkedCount = document.querySelectorAll('.email-checkbox:checked').length;
-        if (bulkDeleteBtn) {
-            bulkDeleteBtn.disabled = checkedCount === 0;
-            bulkDeleteBtn.innerHTML = `
-                <div class="w-4 h-4 flex items-center justify-center mr-1">
-                    <i class="ri-delete-bin-line"></i>
-                </div>
-                Supprimer (${checkedCount})
-            `;
+   <script>
+        // Gestion du modal - NOMS DE FONCTIONS UNIQUES
+        const modalPubli = document.getElementById('publicationModal');
+        
+        function openModalPublication() {
+            console.log('Ouverture du modal publication'); // Debug
+            modalPubli.classList.add('show');
+            document.body.style.overflow = 'hidden';
         }
-    }
-
-    // Suppression en masse
-    if (bulkDeleteBtn) {
-        bulkDeleteBtn.addEventListener('click', function() {
-            const selectedIds = [];
-            document.querySelectorAll('.email-checkbox:checked').forEach(checkbox => {
-                selectedIds.push(parseInt(checkbox.value));
-            });
-
-            if (selectedIds.length === 0) return;
-
-            // Afficher la confirmation
-            const deleteEmailModal = document.getElementById('deleteEmailModal');
-            const confirmDeleteEmailBtn = document.getElementById('confirmDeleteEmailBtn');
-            const cancelDeleteEmailBtn = document.getElementById('cancelDeleteEmailBtn');
-
-            if (deleteEmailModal) {
-                deleteEmailModal.querySelector('p').textContent = `Êtes-vous sûr de vouloir supprimer ${selectedIds.length} email(s) de la liste des abonnés ? Cette action est irréversible.`;
-                deleteEmailModal.classList.remove('hidden');
-
-                // Gérer la confirmation
-                confirmDeleteEmailBtn.onclick = function() {
-                    // Envoyer la requête AJAX
-                    fetch('bulk_delete_emails.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: 'ids=' + JSON.stringify(selectedIds)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Recharger la page après la suppression
-                            Swal.fire({
-                                title: 'Suppression réussie !',
-                                text: `${data.count} email(s) ont été supprimés.`,
-                                icon: 'success',
-                                confirmButtonColor: '#19CDFE'
-                            }).then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire({
-                                title: 'Erreur',
-                                text: data.message || 'Une erreur est survenue lors de la suppression.',
-                                icon: 'error',
-                                confirmButtonColor: '#19CDFE'
-                            });
-                        }
-                        deleteEmailModal.classList.add('hidden');
-                    })
-                    .catch(error => {
-                        console.error('Erreur:', error);
-                        Swal.fire({
-                            title: 'Erreur',
-                            text: 'Une erreur technique est survenue.',
-                            icon: 'error',
-                            confirmButtonColor: '#19CDFE'
-                        });
-                        deleteEmailModal.classList.add('hidden');
-                    });
-                };
-
-                // Gérer l'annulation
-                cancelDeleteEmailBtn.onclick = function() {
-                    deleteEmailModal.classList.add('hidden');
-                };
+        
+        function closeModalPublication() {
+            console.log('Fermeture du modal publication'); // Debug
+            modalPubli.classList.remove('show');
+            document.body.style.overflow = 'auto';
+            resetFormPublication();
+        }
+        
+        function resetFormPublication() {
+            document.getElementById('publicationForm').reset();
+            document.getElementById('selectedFile').innerHTML = '';
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('submitBtn').innerHTML = '🚀 Créer la Publication';
+            document.getElementById('progressBar').style.display = 'none';
+            document.getElementById('progressFill').style.width = '0%';
+        }
+        
+        // Fermer le modal en cliquant à l'extérieur - ÉVÉNEMENT SPÉCIFIQUE
+        modalPubli.addEventListener('click', function(event) {
+            if (event.target === modalPubli) {
+                closeModalPublication();
             }
         });
-    }
-
-    // Suppression individuelle d'email
-    const emailDeleteBtns = document.querySelectorAll('.email-delete-btn');
-    emailDeleteBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const emailId = this.getAttribute('data-id');
-            const deleteEmailModal = document.getElementById('deleteEmailModal');
-            const confirmDeleteEmailBtn = document.getElementById('confirmDeleteEmailBtn');
-            const cancelDeleteEmailBtn = document.getElementById('cancelDeleteEmailBtn');
-
-            if (deleteEmailModal) {
-                deleteEmailModal.querySelector('p').textContent = 'Êtes-vous sûr de vouloir supprimer cet email de la liste des abonnés ? Cette action est irréversible.';
-                deleteEmailModal.classList.remove('hidden');
-
-                // Gérer la confirmation
-                confirmDeleteEmailBtn.onclick = function() {
-                    // Envoyer la requête AJAX
-                    fetch('delete_email.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: 'id=' + emailId
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                title: 'Suppression réussie !',
-                                text: 'L\'email a été supprimé avec succès.',
-                                icon: 'success',
-                                confirmButtonColor: '#19CDFE'
-                            }).then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire({
-                                title: 'Erreur',
-                                text: data.message || 'Une erreur est survenue lors de la suppression.',
-                                icon: 'error',
-                                confirmButtonColor: '#19CDFE'
-                            });
-                        }
-                        deleteEmailModal.classList.add('hidden');
-                    })
-                    .catch(error => {
-                        console.error('Erreur:', error);
-                        Swal.fire({
-                            title: 'Erreur',
-                            text: 'Une erreur technique est survenue.',
-                            icon: 'error',
-                            confirmButtonColor: '#19CDFE'
-                        });
-                        deleteEmailModal.classList.add('hidden');
-                    });
-                };
-
-                // Gérer l'annulation
-                cancelDeleteEmailBtn.onclick = function() {
-                    deleteEmailModal.classList.add('hidden');
-                };
+        
+        // Fermer avec la touche Échap - ÉVÉNEMENT CONDITIONNEL
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && modalPubli.classList.contains('show')) {
+                closeModalPublication();
             }
         });
-    });
-});
-</script>            
+
+        // Gestion du formulaire
+        const videoInput = document.getElementById('video');
+        const selectedFile = document.getElementById('selectedFile');
+        const form = document.getElementById('publicationForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+
+        // Gestion de la sélection de fichier
+        videoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+                selectedFile.innerHTML = `
+                    ✅ Fichier sélectionné: <strong>${file.name}</strong><br>
+                    <small>Taille: ${fileSize} MB</small>
+                `;
+                
+                // Vérification de la taille
+                if (file.size > 100 * 1024 * 1024) {
+                    selectedFile.innerHTML = `
+                        ❌ <strong>Erreur:</strong> Fichier trop volumineux<br>
+                        <small>Taille maximale: 100MB</small>
+                    `;
+                    videoInput.value = '';
+                }
+            } else {
+                selectedFile.innerHTML = '';
+            }
+        });
+        // Initialisation
+        (function() {
+            'use strict';
+            console.log('Modal publication initialisé');
+        })();
+    </script>       
   </body>
 </html>

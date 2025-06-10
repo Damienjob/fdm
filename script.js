@@ -135,9 +135,8 @@ document.addEventListener("DOMContentLoaded", function () {
   // Bouton pour ouvrir le modal de modification depuis la vue
   const editFromViewBtn = document.getElementById("editFromViewBtn");
   editFromViewBtn.addEventListener("click", () => {
-
     document.getElementById("editor-content2").classList.add("active-editor");
-  document.getElementById("editor-content").classList.remove("active-editor");
+    document.getElementById("editor-content").classList.remove("active-editor");
 
     viewModal.classList.add("hidden");
     const activityId = editFromViewBtn.getAttribute("data-id");
@@ -366,10 +365,13 @@ editorButtons.forEach((button) => {
   button.addEventListener("click", function () {
     const command = this.dataset.command;
     // 🔄 Récupère dynamiquement l'éditeur actif
-    const editorContent = document.querySelector("[contenteditable].active-editor");
-    const descriptionTextarea = editorContent.id === "editor-content2"
-      ? document.getElementById("description2")
-      : document.getElementById("description");
+    const editorContent = document.querySelector(
+      "[contenteditable].active-editor"
+    );
+    const descriptionTextarea =
+      editorContent.id === "editor-content2"
+        ? document.getElementById("description2")
+        : document.getElementById("description");
 
     if (command === "createLink") {
       const url = prompt("Entrez l'URL du lien:", "https://");
@@ -649,6 +651,204 @@ document.querySelectorAll(".delete-btn").forEach((button) => {
               });
             }
           });
+      }
+    });
+  });
+});
+
+// Gestion de l'export d'emails
+document.addEventListener("DOMContentLoaded", function () {
+  // Export d'emails
+  const exportEmailsBtn = document.getElementById("exportEmailsBtn");
+  if (exportEmailsBtn) {
+    exportEmailsBtn.addEventListener("click", function () {
+      window.location.href = "export_emails.php";
+    });
+  }
+
+  // Sélection d'emails
+  const selectAllEmails = document.getElementById("selectAllEmails");
+  const emailCheckboxes = document.querySelectorAll(".email-checkbox");
+  const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+
+  if (selectAllEmails) {
+    selectAllEmails.addEventListener("change", function () {
+      const isChecked = this.checked;
+      emailCheckboxes.forEach((checkbox) => {
+        checkbox.checked = isChecked;
+      });
+      updateBulkDeleteButton();
+    });
+  }
+
+  emailCheckboxes.forEach((checkbox) => {
+    checkbox.addEventListener("change", updateBulkDeleteButton);
+  });
+
+  // Mise à jour du bouton de suppression en masse
+  function updateBulkDeleteButton() {
+    const checkedCount = document.querySelectorAll(
+      ".email-checkbox:checked"
+    ).length;
+    if (bulkDeleteBtn) {
+      bulkDeleteBtn.disabled = checkedCount === 0;
+      bulkDeleteBtn.innerHTML = `
+                <div class="w-4 h-4 flex items-center justify-center mr-1">
+                    <i class="ri-delete-bin-line"></i>
+                </div>
+                Supprimer (${checkedCount})
+            `;
+    }
+  }
+
+  // Suppression en masse
+  if (bulkDeleteBtn) {
+    bulkDeleteBtn.addEventListener("click", function () {
+      const selectedIds = [];
+      document
+        .querySelectorAll(".email-checkbox:checked")
+        .forEach((checkbox) => {
+          selectedIds.push(parseInt(checkbox.value));
+        });
+
+      if (selectedIds.length === 0) return;
+
+      // Afficher la confirmation
+      const deleteEmailModal = document.getElementById("deleteEmailModal");
+      const confirmDeleteEmailBtn = document.getElementById(
+        "confirmDeleteEmailBtn"
+      );
+      const cancelDeleteEmailBtn = document.getElementById(
+        "cancelDeleteEmailBtn"
+      );
+
+      if (deleteEmailModal) {
+        deleteEmailModal.querySelector(
+          "p"
+        ).textContent = `Êtes-vous sûr de vouloir supprimer ${selectedIds.length} email(s) de la liste des abonnés ? Cette action est irréversible.`;
+        deleteEmailModal.classList.remove("hidden");
+
+        // Gérer la confirmation
+        confirmDeleteEmailBtn.onclick = function () {
+          // Envoyer la requête AJAX
+          fetch("bulk_delete_emails.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: "ids=" + JSON.stringify(selectedIds),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                // Recharger la page après la suppression
+                Swal.fire({
+                  title: "Suppression réussie !",
+                  text: `${data.count} email(s) ont été supprimés.`,
+                  icon: "success",
+                  confirmButtonColor: "#19CDFE",
+                }).then(() => {
+                  location.reload();
+                });
+              } else {
+                Swal.fire({
+                  title: "Erreur",
+                  text:
+                    data.message ||
+                    "Une erreur est survenue lors de la suppression.",
+                  icon: "error",
+                  confirmButtonColor: "#19CDFE",
+                });
+              }
+              deleteEmailModal.classList.add("hidden");
+            })
+            .catch((error) => {
+              console.error("Erreur:", error);
+              Swal.fire({
+                title: "Erreur",
+                text: "Une erreur technique est survenue.",
+                icon: "error",
+                confirmButtonColor: "#19CDFE",
+              });
+              deleteEmailModal.classList.add("hidden");
+            });
+        };
+
+        // Gérer l'annulation
+        cancelDeleteEmailBtn.onclick = function () {
+          deleteEmailModal.classList.add("hidden");
+        };
+      }
+    });
+  }
+
+  // Suppression individuelle d'email
+  const emailDeleteBtns = document.querySelectorAll(".email-delete-btn");
+  emailDeleteBtns.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      const emailId = this.getAttribute("data-id");
+      const deleteEmailModal = document.getElementById("deleteEmailModal");
+      const confirmDeleteEmailBtn = document.getElementById(
+        "confirmDeleteEmailBtn"
+      );
+      const cancelDeleteEmailBtn = document.getElementById(
+        "cancelDeleteEmailBtn"
+      );
+
+      if (deleteEmailModal) {
+        deleteEmailModal.querySelector("p").textContent =
+          "Êtes-vous sûr de vouloir supprimer cet email de la liste des abonnés ? Cette action est irréversible.";
+        deleteEmailModal.classList.remove("hidden");
+
+        // Gérer la confirmation
+        confirmDeleteEmailBtn.onclick = function () {
+          // Envoyer la requête AJAX
+          fetch("delete_email.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: "id=" + emailId,
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                Swal.fire({
+                  title: "Suppression réussie !",
+                  text: "L'email a été supprimé avec succès.",
+                  icon: "success",
+                  confirmButtonColor: "#19CDFE",
+                }).then(() => {
+                  location.reload();
+                });
+              } else {
+                Swal.fire({
+                  title: "Erreur",
+                  text:
+                    data.message ||
+                    "Une erreur est survenue lors de la suppression.",
+                  icon: "error",
+                  confirmButtonColor: "#19CDFE",
+                });
+              }
+              deleteEmailModal.classList.add("hidden");
+            })
+            .catch((error) => {
+              console.error("Erreur:", error);
+              Swal.fire({
+                title: "Erreur",
+                text: "Une erreur technique est survenue.",
+                icon: "error",
+                confirmButtonColor: "#19CDFE",
+              });
+              deleteEmailModal.classList.add("hidden");
+            });
+        };
+
+        // Gérer l'annulation
+        cancelDeleteEmailBtn.onclick = function () {
+          deleteEmailModal.classList.add("hidden");
+        };
       }
     });
   });

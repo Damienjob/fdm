@@ -16,6 +16,18 @@ $totalPages = ceil($totalActivites / $activitesParPage);
 // Récupérer les activités pour la page courante (triées par date de publication décroissante)
 $sql = "SELECT * FROM activities WHERE statut = 'publié' ORDER BY created_at DESC LIMIT $debut, $activitesParPage";
 $result = $conn->query($sql);
+
+
+// Récupérer les publications depuis la base de données
+$query = "SELECT id, titre, video_path FROM publications";
+$result2 = $conn->query($query);
+$publications = [];
+if ($result2->num_rows > 0) {
+    while($row = $result2->fetch_assoc()) {
+        $publications[] = $row;
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -114,6 +126,150 @@ $result = $conn->query($sql);
         color: #ddd;
         cursor: not-allowed;
       }
+      .hero-section {
+            color: black;
+            padding: 3rem 0;
+            margin-bottom: 3rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-size: cover;
+        }
+        
+        .hero-title {
+            font-weight: 800;
+            font-size: 2.5rem;
+            letter-spacing: -0.5px;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-subtitle {
+            font-weight: 400;
+            font-size: 1.25rem;
+            max-width: 800px;
+            margin: 0 auto 1.5rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        .divider {
+            height: 4px;
+            width: 100px;
+            background: var(--secondary-color);
+            margin: 1.5rem auto;
+            border-radius: 2px;
+        }
+        
+        .publication-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 2rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .publication-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1.25rem;
+            border-bottom: 3px solid var(--secondary-color);
+        }
+        
+        .card-title {
+            font-weight: 700;
+            margin: 0;
+            font-size: 1.25rem;
+            color: #000;
+        }
+        
+        .video-container {
+            position: relative;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            background: #000;
+        }
+        
+        .video-container iframe,
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-footer {
+            background: var(--light-bg);
+            padding: 1rem 1.5rem;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .btn-read-more {
+            background: var(--accent-color);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-read-more:hover {
+            background: #219653;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+        }
+        
+        .btn-read-more i {
+            transition: transform 0.3s ease;
+        }
+        
+        .btn-read-more:hover i {
+            transform: translateX(3px);
+        }
+        
+        .stats-badge {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--secondary-color);
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
     </style>
   </head>
 
@@ -442,7 +598,53 @@ $result = $conn->query($sql);
       </div>
     </div>
     <!-- activité end -->
-    
+    <!-- Section Hero -->
+    <section class="hero-section">
+        <div class="container">
+            <h1 class="hero-title">Nos Publications</h1>
+        </div>
+    </section>
+
+    <!-- Section Publications -->
+    <section class="publications-section py-4">
+        <div class="container">
+            <div class="row">
+                <?php if (!empty($publications)): ?>
+                    <?php foreach ($publications as $pub): ?>
+                        <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="publication-card">
+                                <div class="card-header">
+                                    <h3 class="card-title"><?= htmlspecialchars($pub['titre']) ?></h3>
+                                </div>
+                                <div class="video-container">
+                                    <?php if (strpos($pub['video_path'], 'youtube.com') !== false || strpos($pub['video_path'], 'youtu.be') !== false): ?>
+                                        <!-- Embed YouTube video -->
+                                        <iframe src="<?= $this->getYoutubeId($pub['video_path']) ?>" 
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                allowfullscreen></iframe>
+                                    <?php else: ?>
+                                        <!-- Local video file -->
+                                        <video controls>
+                                            <source src="<?= htmlspecialchars($pub['video_path']) ?>" type="video/mp4">
+                                            Votre navigateur ne supporte pas la lecture de vidéos.
+                                        </video>
+                                    <?php endif; ?>
+                                </div>
+                                                  
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="col-12">
+                        <div class="alert alert-info text-center py-5">
+                            <h4 class="mb-3"><i class="fas fa-info-circle me-2"></i>Aucune publication disponible</h4>
+                            <p class="mb-0">Les publications seront bientôt ajoutées.</p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </section>
 
      <!-- Footer Starts Here -->
      <footer class="footer">
@@ -657,6 +859,28 @@ function loadActivitiesAjax(page) {
   xhr.send();
 }
 </script>
-
+<script>
+        // Animation au défilement
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.publication-card');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = 1;
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            cards.forEach(card => {
+                card.style.opacity = 0;
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                observer.observe(card);
+            });
+        });
+    </script>
+    
   </body>
 </html>
