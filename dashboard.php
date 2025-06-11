@@ -747,7 +747,7 @@ if ($pubResult && $pubResult->num_rows > 0) {
           <div class="mx-auto w-16 h-16 flex items-center justify-center bg-gray-100 rounded-full mb-4">
             <i class="ri-article-line text-gray-400 text-2xl"></i>
           </div>
-          <h3 class="text-lg font-medium text-gray-900 mb-1">Aucune publication</h3>
+          <h3 class="text-lg font-medium text-gray-900 mb-1">Aucune publication !!!</h3>
           <p class="text-gray-500 mb-6">Commencez par ajouter votre première publication</p>
           
         </div>
