@@ -146,7 +146,10 @@ while ($row = $result_images->fetch_assoc()) {
                             <div class="row text-center">
                             <?php foreach ($images as $image): ?>
         <div class="col-md-4 mb-4">
-            <img class="img-fluid fixed-size" src="fdm-main/<?= htmlspecialchars($image) ?>" alt="Image de l'activité">
+            <?php
+$BASEURL = "http://localhost/fdm-main/uploads/";
+?>
+            <img class="img-fluid fixed-size" src="<?=$BASEURL . htmlspecialchars($image) ?>" alt="Image de l'activité">
         </div>
         <?php endforeach; ?>
         <?php if (empty($activite['image']) && count($images) === 0): ?>

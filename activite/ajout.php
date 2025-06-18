@@ -9,7 +9,36 @@ $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {
   die('Erreur de connexion : ' . $conn->connect_error);
 }
+// Définir le charset pour éviter les problèmes d'accents
+$conn->set_charset("utf8");
+// Fonctions slug
+function generateSlug($titre) {
+    $slug = strtolower(trim($titre));
+    $slug = iconv('UTF-8', 'ASCII//TRANSLIT', $slug);
+    $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
+    $slug = trim($slug, '-');
+    return $slug;
+}
 
+function slugExists($conn, $slug, $id = null) {
+    $sql = "SELECT COUNT(*) FROM activities WHERE slug = ?" . ($id ? " AND id != ?" : "");
+    $stmt = $conn->prepare($sql);
+    $id ? $stmt->bind_param("si", $slug, $id) : $stmt->bind_param("s", $slug);
+    $stmt->execute();
+    $stmt->bind_result($count);
+    $stmt->fetch();
+    return $count > 0;
+}
+
+function makeSlugUnique($conn, $baseSlug, $id = null) {
+    $slug = $baseSlug;
+    $i = 1;
+    while (slugExists($conn, $slug, $id)) {
+        $slug = $baseSlug . '-' . $i;
+        $i++;
+    }
+    return $slug;
+}
 // Récupération des champs
 $titre = $conn->real_escape_string($_POST['titre']);
 $description = $conn->real_escape_string($_POST['description']);
@@ -31,10 +60,13 @@ if (!empty($_FILES['image']['name'])) {
         $image_path = $target_file;
     }
 }
+// Génération du slug
+    $baseSlug = generateSlug($titre);
+    $slug = makeSlugUnique($conn, $baseSlug);
 
 // Insertion de l’activité
-$sql = "INSERT INTO activities (titre, description,  image, statut)
-        VALUES ('$titre', '$description', '$image_path', '$statut')";
+$sql = "INSERT INTO activities (titre, description,  image, statut, slug)
+        VALUES ('$titre', '$description', '$image_path', '$statut', '$slug')";
 
 if ($conn->query($sql) === TRUE) {
     $activite_id = $conn->insert_id;

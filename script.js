@@ -1,4 +1,5 @@
 // Modal functionality
+const BASEURL = "http://localhost/fdm-main/uploads/"
 const activityModal = document.getElementById("activityModal");
 const viewModal = document.getElementById("viewModal");
 const deleteModal = document.getElementById("deleteModal");
@@ -73,7 +74,7 @@ viewBtns.forEach((btn) => {
         if (data.success) {
           // Mettre à jour le modal avec les informations de l'activité
           document.getElementById("viewMainImage").src =
-            "http://localhost/fdm-main/uploads/" + data.activity.image;
+            BASEURL + data.activity.image;
           document.getElementById("viewTitle").innerText = data.activity.titre;
 
           document.getElementById("viewDescription").innerHTML =
@@ -84,7 +85,7 @@ viewBtns.forEach((btn) => {
           imageGallery.innerHTML = ""; // Vider la galerie actuelle
           data.activity.images.forEach((image) => {
             const img = document.createElement("img");
-            img.src = "http://localhost/fdm-main/uploads/" + image.chemin;
+            img.src = BASEURL + image.chemin;
             img.alt = "Image supplémentaire";
             img.classList.add(
               "w-full", // Largeur 100%
@@ -158,7 +159,7 @@ document.addEventListener("DOMContentLoaded", function () {
           // 🔹 Image principale depuis la base
           if (data.activity.image) {
             mainImagePreview.src =
-              "http://localhost/fdm-main/uploads/" + data.activity.image;
+              BASEURL + data.activity.image;
             mainImagePreview.classList.remove("hidden");
             mainImagePlaceholder.classList.add("hidden");
           } else {
@@ -177,7 +178,7 @@ document.addEventListener("DOMContentLoaded", function () {
               "image-preview aspect-video bg-gray-100 rounded overflow-hidden relative";
 
             const imgElement = document.createElement("img");
-            imgElement.src = "http://localhost/fdm-main/uploads/" + img.chemin;
+            imgElement.src = BASEURL + img.chemin;
             imgElement.className = "w-full h-full object-cover";
 
             const removeBtn = document.createElement("div");
@@ -283,7 +284,7 @@ document.addEventListener("DOMContentLoaded", function () {
           // 🔹 Si l’image principale a été modifiée
           if (data.image_principale_modifiee && data.nouvelle_image) {
             mainImagePreview.src =
-              "http://localhost/fdm-main/uploads/" + data.nouvelle_image;
+              BASEURL + data.nouvelle_image;
             mainImagePreview.classList.remove("hidden");
             mainImagePlaceholder.classList.add("hidden");
           }
@@ -302,7 +303,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 "image-preview aspect-video bg-gray-100 rounded overflow-hidden relative";
               const imgElement = document.createElement("img");
               imgElement.src =
-                "http://localhost/fdm-main/uploads/" + imgFileName;
+                BASEURL + imgFileName;
               imgElement.className = "w-full h-full object-cover";
               const removeBtn = document.createElement("div");
               removeBtn.className = "remove-image";
